@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Startup Launch Planning Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650;12..96,750&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --ink:#1B2140; --ink-2:#4A5175; --ink-3:#7C83A3;
+  --paper:#EEF1F8; --canvas:#FFFFFF; --line:#DFE3EE; --line-2:#EDF0F6;
+  --primary:#3D4BE0; --primary-ink:#2A35B0; --primary-soft:#E8EAFD;
+  --you:#E8912A; --you-soft:#FDF1E1;
+  --go:#14895B; --go-soft:#E2F4EC; --refine:#C77A12; --refine-soft:#FCF0DC; --rethink:#C23B31; --rethink-soft:#FBE7E5;
+  --r-lg:20px; --r-md:12px; --r-sm:8px;
+  --shadow:0 1px 2px rgba(27,33,64,.06), 0 8px 24px -12px rgba(27,33,64,.18);
+  --display:"Bricolage Grotesque", system-ui, sans-serif; --body:Figtree, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-.015em;line-height:1.15}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:6px}
+.icon{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+
+/* ================= LANDING ================= */
+.navlinks{display:flex;gap:4px;margin-left:24px}
+.navlinks a{color:var(--ink-2);text-decoration:none;font-weight:600;font-size:13.5px;padding:7px 12px;border-radius:99px}
+.navlinks a:hover{background:var(--canvas);color:var(--ink)}
+@media(max-width:860px){.navlinks{display:none}}
+.brandlink{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;border-radius:12px}
+.cta{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:12px;background:var(--primary);color:#fff;padding:13px 20px;font:650 15.5px var(--display);cursor:pointer;text-decoration:none;transition:background .15s}
+.cta:hover{background:var(--primary-ink)}
+.cta.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px #C9CFDF}
+.cta.ghost:hover{background:var(--canvas)}
+.cta.small{padding:9px 15px;font-size:14px;border-radius:10px}
+.appbar .cta.small{margin-left:8px}
+@media(max-width:620px){.appbar .cta.small{display:none}}
+#homeView{display:none}
+.land{max-width:1380px;margin:0 auto;padding:0 24px}
+.hero{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:center;padding:64px 0 56px}
+@media(max-width:1020px){.hero{grid-template-columns:1fr;padding-top:40px}}
+.hero h1{font-size:clamp(40px,5.4vw,72px);line-height:.98;letter-spacing:-.045em;font-weight:750}
+.hero h1 .strike{position:relative;color:var(--ink-3);white-space:nowrap}
+.hero h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.09em;background:var(--rethink);transform:rotate(-2deg);border-radius:4px}
+.hero p.lead{font-size:18px;color:var(--ink-2);max-width:46ch;margin:22px 0 28px;line-height:1.55}
+.hero .actions{display:flex;gap:12px;flex-wrap:wrap}
+.hero .meta{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap;color:var(--ink-2);font-size:13.5px}
+.hero .meta span{display:flex;gap:7px;align-items:center}
+.hero .meta .icon{color:var(--go);width:16px;height:16px}
+
+/* launch board */
+.board{background:var(--ink);border-radius:22px;padding:22px 22px 18px;color:#fff;box-shadow:0 30px 60px -30px rgba(27,33,64,.6)}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.board-h h2{font-size:20px;color:#fff}
+.board-h small{color:#9AA3D8;font-size:12.5px}
+.brow{display:grid;grid-template-columns:34px 1.5fr 1fr 64px 92px;gap:10px;align-items:center;padding:10px 6px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer;border-radius:10px;transition:background .15s}
+.brow:hover,.brow:focus-visible{background:rgba(255,255,255,.06)}
+.brow.head{cursor:default;border-top:0;padding-top:0;color:#9AA3D8;font-size:12px;font-weight:600}
+.brow.head:hover{background:none}
+.brow .bi{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.08);display:grid;place-items:center;color:#B9C0F2}
+.brow .bn{min-width:0}
+.brow .bn b{display:block;font-size:14.5px}
+.brow .bn span{font-size:12px;color:#9AA3D8;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flap{display:inline-flex;gap:2px}
+.flap i{font-style:normal;display:inline-grid;place-items:center;min-width:.72em;height:1.45em;padding:0 2px;background:#262D55;border-radius:3px;font:700 15px/1 var(--display);font-variant-numeric:tabular-nums;position:relative;color:#fff}
+.flap i::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.35)}
+.bscore .flap i{font-size:17px}
+.bstat{justify-self:end}
+.bstat .flap i{font-size:11.5px;min-width:.9em;letter-spacing:0}
+.bstat.GO .flap i{background:#0F5E40;color:#BFF0D9}
+.bstat.REFINE .flap i{background:#6B4310;color:#FFE1B3}
+.bstat.RETHINK .flap i{background:#6E2019;color:#FFD3CE}
+.board-f{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);font-size:12.5px;color:#9AA3D8;flex-wrap:wrap}
+@media(max-width:620px){.brow{grid-template-columns:30px 1fr 54px 84px}.brow .bc{display:none}}
+
+.lsec{padding:56px 0;border-top:1px solid var(--line)}
+.lsec-h{max-width:640px;margin-bottom:30px}
+.lsec-h h2{font-size:clamp(28px,3vw,40px);letter-spacing:-.03em;line-height:1.05}
+.lsec-h p{color:var(--ink-2);font-size:16px;margin:12px 0 0}
+.flow{display:grid;grid-template-columns:repeat(7,1fr);gap:0;position:relative;counter-reset:f}
+@media(max-width:1020px){.flow{grid-template-columns:1fr;gap:12px}}
+.fstep{padding:0 18px 0 0;position:relative}
+.fstep .fn{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.fstep .fn b{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 14px var(--display);flex:none}
+.fstep .fn::after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--ink-3) 0 6px,transparent 6px 12px);opacity:.5}
+.fstep:last-child .fn::after{display:none}
+@media(max-width:1020px){.fstep .fn::after{display:none}.fstep{display:grid;grid-template-columns:44px 1fr;padding:0}.fstep .fn{margin:0}}
+.fstep h3{font-size:17px;margin-bottom:6px}
+.fstep p{margin:0;color:var(--ink-2);font-size:14px}
+.fstep code{font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--primary-ink);background:var(--primary-soft);padding:1px 6px;border-radius:5px}
+
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:1020px){.feat{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.feat{grid-template-columns:1fr}}
+.ft{background:var(--canvas);border:1px solid var(--line);border-radius:16px;padding:20px}
+.ft.big{grid-row:span 2;display:flex;flex-direction:column}
+.ft .fi{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary-ink);display:grid;place-items:center;margin-bottom:14px}
+.ft h3{font-size:17px;margin-bottom:6px}
+.ft p{margin:0;color:var(--ink-2);font-size:14px}
+.mini{margin-top:auto;padding-top:18px}
+.mini .mrow{display:grid;grid-template-columns:120px 1fr 28px;gap:8px;align-items:center;font-size:12.5px;margin:7px 0;color:var(--ink-2)}
+.mini .mtr{height:8px;border-radius:8px;background:var(--line-2);overflow:hidden}
+.mini .mtr i{display:block;height:100%;border-radius:8px}
+
+.exgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.excard.own{border-style:dashed;background:var(--you-soft);border-color:#F0C98F}
+.excard.own .ei2{background:#fff;color:#8A520C}
+@media(max-width:1180px){.exgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.exgrid{grid-template-columns:1fr}}
+.excard{text-align:left;background:var(--canvas);border:1px solid var(--line);border-radius:16px;padding:18px;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:border-color .15s, box-shadow .15s;color:var(--ink)}
+.excard:hover{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.excard .et{display:flex;justify-content:space-between;align-items:center}
+.excard .ei2{width:38px;height:38px;border-radius:11px;background:var(--paper);display:grid;place-items:center;color:var(--primary-ink)}
+.excard h3{font-size:16.5px}
+.excard p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.excard .eb{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--ink-3);margin-top:auto;padding-top:10px;border-top:1px solid var(--line-2)}
+.excard .eb b{color:var(--primary-ink)}
+
+.honest{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+@media(max-width:1020px){.honest{grid-template-columns:1fr}}
+.hlist{display:flex;flex-direction:column;gap:14px}
+.hl{display:flex;gap:14px;padding:16px;background:var(--canvas);border:1px solid var(--line);border-radius:14px}
+.hl .icon{color:var(--go);width:22px;height:22px;margin-top:2px}
+.hl b{display:block;font-size:15px;margin-bottom:2px}
+.hl span{color:var(--ink-2);font-size:14px}
+.endcta{margin:56px 0 30px;background:var(--primary);color:#fff;border-radius:24px;padding:44px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.endcta h2{font-size:clamp(26px,3vw,38px);letter-spacing:-.03em;max-width:20ch;color:#fff}
+.endcta p{margin:8px 0 0;color:#D6DAFB}
+.endcta .cta{background:#fff;color:var(--primary-ink)}
+.endcta .cta:hover{background:var(--primary-soft)}
+.lfoot{padding:10px 0 36px;color:var(--ink-3);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ---------- workflow additions: business model, assumption check, validation ---------- */
+.canvas{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:auto auto auto;gap:10px}
+.canvas .cb{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#FBFCFE;min-width:0}
+.canvas .cb h4{font:650 13.5px var(--display);margin:0 0 6px;display:flex;gap:6px;align-items:center}
+.canvas .cb h4 .icon{width:15px;height:15px;color:var(--primary-ink)}
+.canvas .cb ul{margin:0;padding-left:16px;font-size:13px}.canvas .cb li{margin:3px 0}.canvas .cb p{margin:0;font-size:13px}
+.canvas .vp{background:var(--you-soft);border-color:#F0C98F}
+.cb.c-prob{grid-column:1;grid-row:1/3}.cb.c-sol{grid-column:2;grid-row:1}.cb.c-met{grid-column:2;grid-row:2}.cb.c-vp{grid-column:3;grid-row:1/3}
+.cb.c-adv{grid-column:4;grid-row:1}.cb.c-ch{grid-column:4;grid-row:2}.cb.c-seg{grid-column:5;grid-row:1/3}.cb.c-cost{grid-column:1/3;grid-row:3}.cb.c-rev{grid-column:3/6;grid-row:3}
+@media(max-width:1000px){.canvas{grid-template-columns:1fr 1fr}.canvas .cb{grid-column:auto!important;grid-row:auto!important}}
+@media(max-width:560px){.canvas{grid-template-columns:1fr}}
+.chkcounts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.st-b{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.st-b .icon{width:13px;height:13px}
+.st-b.ok{background:var(--go-soft);color:var(--go)}.st-b.stretch{background:var(--refine-soft);color:var(--refine)}.st-b.unrealistic{background:var(--rethink-soft);color:var(--rethink)}.st-b.unverified{background:#EDF0F6;color:var(--ink-2)}
+.chk td{font-size:13.5px}.chk td.why{color:var(--ink-2);min-width:300px}.chk .pill{white-space:normal}.chk td:first-child{min-width:140px}
+.vqtable td{font-size:13.5px}.pri-b{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:99px}
+.pri-b.High{background:var(--rethink-soft);color:var(--rethink)}.pri-b.Medium{background:var(--refine-soft);color:var(--refine)}.pri-b.Low{background:#EDF0F6;color:var(--ink-2)}
+ol.guide{margin:6px 0 0;padding-left:20px}ol.guide li{margin:7px 0;font-size:14px}
+.capnote{font-size:13px;color:var(--rethink);margin-top:8px}
+/* ---------- app bar ---------- */
+.appbar{position:sticky;top:0;z-index:30;background:rgba(238,241,248,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.appbar .in{max-width:1380px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--ink);display:grid;place-items:center;color:#fff}
+.brand b{font:700 17px/1 var(--display);display:block}
+.brand span{font-size:12.5px;color:var(--ink-3)}
+@media(max-width:620px){.brand span{display:none}.shell{padding:14px}}
+.status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);background:var(--canvas);border:1px solid var(--line);padding:6px 12px;border-radius:99px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.dot.on{background:var(--go);box-shadow:0 0 0 4px var(--go-soft)}
+
+.shell{max-width:1380px;margin:0 auto;padding:24px;display:grid;grid-template-columns:390px minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:1020px){.shell{grid-template-columns:1fr}}
+
+/* ---------- brief panel ---------- */
+.brief{position:sticky;top:78px;background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);max-height:calc(100vh - 100px);display:flex;flex-direction:column}
+@media(max-width:1020px){.brief{position:static;max-height:none}}
+.brief-head{padding:20px 22px 14px;border-bottom:1px solid var(--line-2)}
+.brief-head h2{font-size:21px}
+.brief-head p{margin:4px 0 0;color:var(--ink-2);font-size:13.5px}
+.brief-body{padding:6px 22px 18px;overflow:auto}
+.examples{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.ex{color:var(--ink);display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--canvas);border-radius:var(--r-md);padding:9px 10px;cursor:pointer;transition:border-color .15s, background .15s}
+.ex:hover{border-color:var(--primary);background:var(--primary-soft)}
+.ex[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-soft);box-shadow:inset 0 0 0 1px var(--primary)}
+.ex .ei{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--paper);color:var(--primary-ink)}
+.ex b{display:block;font-size:13px;line-height:1.2}
+.ex span{font-size:12px;color:var(--ink-3)}
+.ex.own{border-style:dashed}
+.ex.own .ei{background:var(--you-soft);color:#8A520C}
+.customwrap{margin-top:10px;padding:12px;border-radius:10px;background:var(--you-soft);border:1px solid #F5D9AE}
+.customwrap .field:first-child{margin-top:0}
+.customwrap .tip{font-size:12.5px;color:#7A4A06;display:flex;gap:7px;align-items:flex-start;margin-bottom:6px}
+.customwrap .tip .icon{width:15px;height:15px;margin-top:2px}
+.notice.info{background:var(--primary-soft);color:var(--primary-ink)}
+.step{margin-top:20px}
+.step-h{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.step-n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:600 12.5px var(--display)}
+.step-h h3{font-size:16px}
+.field{margin-top:12px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:5px}
+.field .help{font-size:12.5px;color:var(--ink-3);margin-top:5px}
+.ctl{width:100%;border:1px solid var(--line);background:#FBFCFE;border-radius:var(--r-sm);padding:10px 12px;transition:border-color .15s, box-shadow .15s}
+.ctl:hover{border-color:#C9CFDF}
+.ctl:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft);background:#fff}
+textarea.ctl{resize:vertical;min-height:70px}
+select.ctl{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C83A3' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.affix{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-sm);background:#FBFCFE;transition:border-color .15s, box-shadow .15s}
+.affix:focus-within{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft);background:#fff}
+.affix input{border:0;background:transparent;padding:10px 4px 10px 0;width:100%;min-width:0}
+.affix input:focus{outline:none}
+.affix span{display:grid;place-items:center;padding:0 10px;color:var(--ink-3);font-size:13.5px;white-space:nowrap}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--paper);border-radius:10px;padding:4px;gap:4px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{margin:0;text-align:center;padding:8px 4px;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;color:var(--ink-2);display:flex;flex-direction:column;align-items:center;gap:3px}
+.seg label .icon{width:16px;height:16px}
+.seg input:checked+label{background:var(--canvas);color:var(--ink);box-shadow:0 1px 3px rgba(27,33,64,.15);font-weight:600}
+.seg input:focus-visible+label{outline:3px solid var(--primary)}
+/* live price position */
+.pricebar{position:relative;height:30px;margin-top:10px}
+.pricebar .track{position:absolute;left:0;right:0;top:13px;height:4px;border-radius:4px;background:var(--line)}
+.pricebar .tick{position:absolute;top:9px;width:2px;height:12px;background:var(--ink-3);border-radius:2px}
+.pricebar .me{position:absolute;top:4px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--you);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:left .25s}
+.pricebar .ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);position:absolute;top:28px;left:0;right:0}
+.price-note{margin-top:20px;font-size:12.5px;color:var(--ink-2)}
+.brief-foot{padding:14px 22px 18px;border-top:1px solid var(--line-2);background:var(--canvas);border-radius:0 0 var(--r-lg) var(--r-lg)}
+.mode{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:12px}
+.switch{white-space:nowrap;position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.switch input{position:absolute;opacity:0}
+.switch .tr{width:38px;height:22px;border-radius:99px;background:#C9CFDF;position:relative;transition:background .15s}
+.switch .tr::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+.tr{background:var(--primary)}
+.switch input:checked+.tr::after{transform:translateX(16px)}
+.switch input:disabled+.tr{opacity:.5}
+.switch input:focus-visible+.tr{outline:3px solid var(--primary);outline-offset:2px}
+.mode small{color:var(--ink-3);font-weight:400}
+.run{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:12px;background:var(--primary);color:#fff;padding:13px;font:650 15.5px var(--display);cursor:pointer;transition:background .15s, transform .05s}
+.run:hover{background:var(--primary-ink)}
+.run:active{transform:translateY(1px)}
+.run:disabled{background:#8C93D9;cursor:progress}
+.spin{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;animation:sp .8s linear infinite;display:none}
+.run:disabled .spin{display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{color:var(--rethink);font-size:12.5px;margin-top:6px;display:none}
+.invalid{border-color:var(--rethink)!important}
+
+/* ---------- main ---------- */
+main{min-width:0;display:flex;flex-direction:column;gap:20px}
+.panel{background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;box-shadow:var(--shadow)}
+.panel-h{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.panel-h h2{font-size:20px}
+.panel-h p{margin:3px 0 0;color:var(--ink-2);font-size:13.5px}
+
+/* empty state */
+.empty{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center;padding:34px}
+@media(max-width:800px){.empty{grid-template-columns:1fr}}
+.empty h1{font-size:clamp(28px,3.4vw,42px);line-height:1.05;letter-spacing:-.03em}
+.empty p.lead{color:var(--ink-2);font-size:16px;max-width:52ch;margin:14px 0 22px}
+.gets{display:grid;gap:12px}
+.get{display:flex;gap:12px;align-items:flex-start}
+.get .gi{width:34px;height:34px;border-radius:10px;background:var(--primary-soft);color:var(--primary-ink);display:grid;place-items:center;flex:none}
+.get b{display:block;font-size:14.5px}
+.get span{font-size:13.5px;color:var(--ink-2)}
+.empty svg.art{width:100%;height:auto}
+
+/* launch sequence rail */
+.rail{display:grid;grid-template-columns:repeat(9,1fr);position:relative;margin:6px 0 4px}
+.rail::before{content:"";position:absolute;left:7%;right:7%;top:19px;height:3px;background:var(--line);border-radius:3px}
+.rail .fillbar{position:absolute;left:7%;top:19px;height:3px;background:var(--primary);border-radius:3px;width:0;transition:width .35s ease}
+.st{position:relative;text-align:center;padding:0 4px}
+.st .b{width:40px;height:40px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:var(--canvas);border:2px solid var(--line);color:var(--ink-3);transition:all .25s}
+.st .l{font-size:12.5px;font-weight:600;margin-top:8px;color:var(--ink-3)}
+.st .d{font-size:11.5px;color:var(--ink-3);margin-top:2px;min-height:2.6em}
+.st.active .b{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 6px var(--primary-soft);animation:pulse 1s ease-in-out infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 0 10px rgba(61,75,224,.08)}}
+.st.done .b{background:var(--primary);border-color:var(--primary);color:#fff}
+.st.done .l,.st.active .l{color:var(--ink)}
+.st.done .d{color:var(--ink-2)}
+@media(max-width:800px){.rail{grid-template-columns:1fr;gap:8px}.rail::before,.rail .fillbar{display:none}.st{display:grid;grid-template-columns:40px 1fr;gap:10px;text-align:left;align-items:center}.st .b{margin:0}.st .l{margin:0}.st .d{min-height:0}}
+.calls{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;display:none}
+.calls h4{font:600 13px var(--body);color:var(--ink-2);margin-bottom:6px}
+.call{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:5px 0}
+.call .ci{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex:none;background:var(--primary-soft);color:var(--primary-ink)}
+.call .ci .icon{width:13px;height:13px}
+.call.fail .ci{background:var(--rethink-soft);color:var(--rethink)}
+.call code{font-family:var(--body);font-weight:600}
+.call .cd{color:var(--ink-2)}
+.notice{display:none;gap:10px;align-items:flex-start;background:var(--refine-soft);color:#7A4A06;border-radius:var(--r-md);padding:12px 14px;font-size:13.5px}
+
+/* report */
+#report{display:none;flex-direction:column;gap:20px}
+.tabs{position:sticky;top:62px;z-index:20;display:flex;gap:4px;align-items:center;background:rgba(238,241,248,.92);backdrop-filter:blur(10px);padding:8px 0;overflow-x:auto;scrollbar-width:none}
+.tabs button{border:0;background:transparent;padding:8px 14px;border-radius:99px;font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tabs button:hover{background:var(--canvas)}
+.tabs button.on{background:var(--ink);color:#fff}
+.tabs .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--canvas);border-radius:99px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.dl{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.dl:hover{background:#2C3463}
+.btn.dl:disabled{opacity:.6;cursor:progress}
+section[data-tab]{scroll-margin-top:120px}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:center}
+@media(max-width:900px){.verdict{grid-template-columns:1fr}}
+.gauge{position:relative;width:280px;margin:0 auto}
+.gauge svg{width:100%;display:block}
+.gauge .gv{text-align:center;margin-top:-6px}
+.gauge .gv b{font:750 54px/1 var(--display);letter-spacing:-.04em}
+.gauge .gv span{display:block;font-size:12.5px;color:var(--ink-3)}
+.chip{display:inline-flex;align-items:center;gap:7px;font:700 13px var(--display);letter-spacing:.02em;padding:6px 12px;border-radius:99px}
+.chip.GO{background:var(--go-soft);color:var(--go)} .chip.REFINE{background:var(--refine-soft);color:var(--refine)} .chip.RETHINK{background:var(--rethink-soft);color:var(--rethink)}
+.idea-q{font-size:13.5px;color:var(--ink-2);margin-left:6px}
+.headline{font:600 23px/1.3 var(--display);letter-spacing:-.015em;margin:12px 0 18px;max-width:60ch}
+.sub{display:grid;grid-template-columns:minmax(150px,190px) 1fr 40px;gap:12px;align-items:center;font-size:13.5px;margin:7px 0}
+.sub .w{color:var(--ink-3);font-size:12px}
+.sub .tr{height:10px;background:var(--line-2);border-radius:10px;overflow:hidden}
+.sub .fl{height:100%;border-radius:10px;width:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.sub b{text-align:right;font-family:var(--display)}
+.src-tag{font-size:12px;color:var(--ink-3);margin-top:14px;display:flex;gap:6px;align-items:center}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(min-width:1260px){.kpis{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 14px 13px;border-top:4px solid var(--line)}
+.kpi.good{border-top-color:var(--go)} .kpi.warn{border-top-color:var(--refine)} .kpi.bad{border-top-color:var(--rethink)}
+.kpi .kl{font-size:12.5px;color:var(--ink-2);font-weight:600;display:flex;gap:6px;align-items:center}
+.kpi .kl .icon{width:15px;height:15px;color:var(--ink-3)}
+.kpi .kv{font:700 25px/1.1 var(--display);margin-top:8px;letter-spacing:-.02em}
+.kpi .ks{font-size:12px;color:var(--ink-3);margin-top:4px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1180px){.grid2{grid-template-columns:1fr}}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.fn{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;font-size:13.5px}
+.fn .fb{height:34px;border-radius:8px;background:var(--primary-soft);display:flex;align-items:center;padding:0 12px;color:var(--primary-ink);font-weight:600;min-width:fit-content;white-space:nowrap}
+.fn b{font-family:var(--display);font-variant-numeric:tabular-nums}
+.fn.you .fb{background:var(--you-soft);color:#8A520C}
+.chart{position:relative;height:290px}
+.foot{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--ink-3);font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:hover td{background:#FAFBFE}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.cname b{display:block}
+.cname span{font-size:12.5px;color:var(--ink-3)}
+.pcell{min-width:140px}
+.pbar{height:6px;border-radius:6px;background:var(--line-2);margin-top:6px;position:relative}
+.pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:#9AA3D8}
+.pbar u{position:absolute;top:-4px;width:2px;height:14px;background:var(--you);border-radius:2px}
+.stars{color:#E3A008;letter-spacing:1px;font-size:12px}
+.gap{color:var(--rethink)}
+.pill{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;background:var(--paper);color:var(--ink-2);white-space:nowrap}
+.tblwrap{overflow-x:auto;margin:0 -6px}
+
+.needs{display:flex;flex-direction:column;gap:12px}
+.need{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:center}
+.need .nt{font-size:14px;font-weight:600}
+.need .nbars{position:relative;height:12px;background:var(--line-2);border-radius:12px;margin-top:6px}
+.need .imp{position:absolute;left:0;top:0;bottom:0;border-radius:12px;background:var(--primary-soft)}
+.need .sat{position:absolute;left:0;top:3px;height:6px;border-radius:6px;background:var(--ink-3)}
+.need .gapv{text-align:center;font:700 15px var(--display);border-radius:10px;padding:6px 0}
+.need .gapv small{display:block;font:500 11px var(--body);color:inherit;opacity:.8}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--ink-2);margin-bottom:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
+.opps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.opps li{display:flex;gap:10px;font-size:14px;padding:12px;border-radius:var(--r-md);background:var(--paper)}
+.opps li .icon{color:var(--go);margin-top:2px}
+.positioning{font-size:15px;line-height:1.6;margin:0 0 16px;padding-left:14px;border-left:3px solid var(--you)}
+
+.costgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:1180px){.costgrid{grid-template-columns:1fr}}
+.costgrid h3{font-size:15px;margin-bottom:6px}
+tr.total td{font-weight:700;border-top:2px solid var(--line);border-bottom:0}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:10px 0 4px}
+.stack i{display:block;height:100%}
+.costnote{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+@media(max-width:700px){.costnote{grid-template-columns:1fr}}
+.cn{background:var(--paper);border-radius:var(--r-md);padding:12px}
+.cn b{font:700 18px var(--display);display:block}
+.cn span{font-size:12.5px;color:var(--ink-2)}
+
+.risks{display:flex;flex-direction:column;gap:10px}
+.risk{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+@media(max-width:700px){.risk{grid-template-columns:1fr}}
+.risk>div{padding:12px 14px;font-size:14px;display:flex;gap:10px}
+.risk .r{background:var(--rethink-soft);color:#7E231B}
+.risk .m{color:var(--ink)}
+.risk .m .icon{color:var(--go)}
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative}
+@media(max-width:900px){.plan{grid-template-columns:1fr}}
+.ph{border:1px solid var(--line);border-radius:var(--r-md);padding:16px;background:linear-gradient(var(--canvas),var(--canvas)) padding-box}
+.ph .pt{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ph .pn{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 13px var(--display)}
+.ph h3{font-size:15.5px}
+.ph .prog{font-size:12px;color:var(--ink-3);margin-left:auto}
+.task{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:7px 0;border-top:1px solid var(--line-2);cursor:pointer}
+.task input{margin-top:3px;accent-color:var(--primary);width:16px;height:16px;flex:none}
+.task input:checked+span{text-decoration:line-through;color:var(--ink-3)}
+.validate{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+@media(max-width:900px){.validate{grid-template-columns:1fr}}
+.vq{display:flex;gap:10px;padding:14px;border-radius:var(--r-md);background:var(--you-soft);font-size:14px;color:#6B3F07}
+.vq .icon{color:var(--you)}
+.disclaimer{font-size:12.5px;color:var(--ink-3);display:flex;gap:8px;align-items:flex-start;padding:0 4px 20px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:99px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:50;display:flex;gap:8px;align-items:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/></symbol>
+    <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zM7 21h10M12 3v4M8 5l1 3M16 5l-1 3"/></symbol>
+    <symbol id="i-cup" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4zM6 2v2M10 2v2M14 2v2"/></symbol>
+    <symbol id="i-paw" viewBox="0 0 24 24"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.8 1.2A4 4 0 0 0 4.3 17a3.5 3.5 0 0 1 .4-6.7A5 5 0 0 1 9 10z"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l7-7M14 21l7-7"/></symbol>
+    <symbol id="i-desk" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></symbol>
+    <symbol id="i-mix" viewBox="0 0 24 24"><path d="M3 9l1.5-5h9L15 9M3 9v11h9M3 9h12"/><rect x="15" y="12" width="7" height="10" rx="1.5"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4A6 6 0 1 1 10.3 18M7 6h1v4M16.7 13.9l.7.7-2.8 2.8"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l4-4M3.3 19a10 10 0 1 1 17.4 0"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8L20 10l-5 3.9L16.6 20 12 16.6 7.4 20 9 13.9 4 10l6.1-1.2z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></symbol>
+  </defs>
+</svg>
+<script>const ic=(n,c="")=>`<svg class="icon ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;</script>
+
+<header class="appbar">
+  <div class="in">
+    <a class="brandlink" href="#home" aria-label="Launch Planner home"><div class="logo"><svg class="icon"><use href="#i-rocket"/></svg></div>
+    <div class="brand"><b>Launch Planner</b><span>Startup launch planning agent for campus and local markets</span></div></a>
+    <nav class="navlinks" id="navlinks" aria-label="Page sections">
+      <a href="#how-it-works">How it works</a><a href="#the-report">The report</a><a href="#examples">Examples</a>
+    </nav>
+    <div class="status" role="status"><span class="dot" id="aiDot"></span><span id="modeBadge">Checking AI availability</span></div>
+    <a class="cta small" href="#planner" id="navCta">Open the planner</a>
+    <a class="cta small ghost" href="#home" id="homeLink" style="display:none">Home</a>
+  </div>
+</header>
+
+<div id="homeView">
+<div class="land">
+  <section class="hero">
+    <div>
+      <h1>Test the idea before you sign the lease.</h1>
+      <p class="lead">An AI agent for entrepreneurs. Pick a campus or local-market opportunity and it explores competitors and their visible prices, maps customer needs, builds your business model, estimates the economics, checks your assumptions and lists the questions to validate before you spend money.</p>
+      <div class="actions">
+        <a class="cta" href="#planner">Evaluate my idea</a>
+        <button class="cta ghost" type="button" data-preset="1">Try the campus example</button>
+      </div>
+      <div class="meta">
+        <span>${check}Campus or any Indian city</span><span>${check}Every number traceable</span><span>${check}PDF report to share</span>
+      </div>
+    </div>
+    <div class="board" aria-label="Example launch verdicts">
+      <div class="board-h"><h2>Today's launch board</h2><small>Click a row to open it</small></div>
+      <div class="brow head" aria-hidden="true"><span></span><span>Idea</span><span class="bc">City</span><span>Score</span><span class="bstat">Status</span></div>
+      <div id="boardRows"></div>
+      <div class="board-f"><span>Scored live by the planner from its demo dataset</span><span id="boardTime"></span></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="how-it-works">
+    <div class="lsec-h"><h2>What the agent does with your brief</h2><p>It works through the same steps a good analyst would, calling a research tool at each one and showing you what it found.</p></div>
+    <div class="flow">
+      <div class="fstep"><div class="fn"><b>1</b></div><div><h3>Reads your brief</h3><p>Idea, campus or city, customers, price, budget and any interviews.</p></div></div>
+      <div class="fstep"><div class="fn"><b>2</b></div><div><h3>Explores competitors</h3><p>Who sells what nearby, at what visible price, with <code>get_competitors</code>.</p></div></div>
+      <div class="fstep"><div class="fn"><b>3</b></div><div><h3>Maps customer needs</h3><p>Ranks needs that today's options don't meet well.</p></div></div>
+      <div class="fstep"><div class="fn"><b>4</b></div><div><h3>Builds the business model</h3><p>Segments, value proposition, channels, revenue and costs on one canvas.</p></div></div>
+      <div class="fstep"><div class="fn"><b>5</b></div><div><h3>Estimates the economics</h3><p>Setup and running costs, margin, break-even and 36 months of cash.</p></div></div>
+      <div class="fstep"><div class="fn"><b>6</b></div><div><h3>Checks assumptions</h3><p>Flags what's unrealistic and tests what a 20% miss would do to profit.</p></div></div>
+      <div class="fstep"><div class="fn"><b>7</b></div><div><h3>Lists what to validate</h3><p>Questions, experiments, success signals and an interview guide.</p></div></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="the-report">
+    <div class="lsec-h"><h2>A report you can argue with</h2><p>No black box. The score breaks into five parts, and every figure points back to a stated assumption you can change.</p></div>
+    <div class="feat">
+      <div class="ft big"><div class="fi">${gauge}</div><h3>A launch score out of 100</h3><p>Weighted across market, competition, unmet need, unit economics and funding fit. A loss-making plan can never score a Go.</p>
+        <div class="mini">
+          <div class="mrow"><span>Market</span><div class="mtr"><i style="width:71%;background:var(--go)"></i></div><b>71</b></div>
+          <div class="mrow"><span>Competition</span><div class="mtr"><i style="width:56%;background:var(--refine)"></i></div><b>56</b></div>
+          <div class="mrow"><span>Unmet need</span><div class="mtr"><i style="width:63%;background:var(--refine)"></i></div><b>63</b></div>
+          <div class="mrow"><span>Unit economics</span><div class="mtr"><i style="width:61%;background:var(--refine)"></i></div><b>61</b></div>
+          <div class="mrow"><span>Funding fit</span><div class="mtr"><i style="width:76%;background:var(--go)"></i></div><b>76</b></div>
+        </div></div>
+      <div class="ft"><div class="fi">${tag}</div><h3>Competitors and their prices</h3><p>Who sells what, for how much, how they're rated, and the weakness you can attack.</p></div>
+      <div class="ft"><div class="fi">${heart}</div><h3>What customers are missing</h3><p>Importance against satisfaction, so the biggest gaps stand out.</p></div>
+      <div class="ft"><div class="fi">${desk}</div><h3>Your business model</h3><p>A one-page canvas built from the research, plus every cost you might forget.</p></div>
+      <div class="ft"><div class="fi">${shield}</div><h3>Assumptions, checked</h3><p>Each assumption marked plausible, a stretch or unrealistic, with what it costs you if it's wrong.</p></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="examples">
+    <div class="lsec-h"><h2>Start from an example, or bring your own idea</h2><p>Examples open the planner with the brief filled in. For anything else, Claude researches the market for you first.</p></div>
+    <div class="exgrid" id="exgrid"></div>
+  </section>
+
+  <section class="lsec">
+    <div class="honest">
+      <div class="lsec-h" style="margin:0"><h2>Built to be checked, not trusted blindly</h2><p>The agent decides which tools to call and which prices to test. You decide what happens next.</p></div>
+      <div class="hlist">
+        <div class="hl">${shield}<div><b>Numbers come from code, not guesswork</b><span>Claude reasons and writes; a planning model does every calculation, so the same brief gives the same figures.</span></div></div>
+        <div class="hl">${info}<div><b>Demo data is labelled as demo data</b><span>Competitors are illustrative and city costs indicative. The report tells you which assumptions to verify first.</span></div></div>
+        <div class="hl">${users}<div><b>You stay in charge</b><span>Change the price, model or budget and re-run in seconds. Committing money is your call.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="endcta">
+    <div><h2>Your idea deserves better than a hunch.</h2><p>Fill in a short brief and get the full analysis, plus a PDF to share.</p></div>
+    <a class="cta" href="#planner">Open the planner</a>
+  </section>
+  <footer class="lfoot"><span>Launch Planner: a startup launch planning agent</span><span>Demo dataset for learning purposes. Verify before investing.</span></footer>
+</div>
+</div>
+<div id="appView">
+<div class="shell">
+  <!-- ============ BRIEF ============ -->
+  <form class="brief" id="f" autocomplete="off" novalidate>
+    <div class="brief-head">
+      <h2>Your launch brief</h2>
+      <p>Start from an example or describe your own idea.</p>
+      <div class="examples" id="presets" role="group" aria-label="Example ideas"></div>
+    </div>
+    <div class="brief-body">
+      <div class="step">
+        <div class="step-h"><span class="step-n">1</span><h3>The idea</h3></div>
+        <div class="field">
+          <label for="idea">What are you launching?</label>
+          <textarea class="ctl" id="idea" placeholder="e.g. High-protein, regional-flavour meal subscription for office-goers"></textarea>
+          <div class="err" id="ideaErr">Describe the idea in a sentence so the agent knows what to evaluate.</div>
+        </div>
+        <div class="field">
+          <label for="category">Business type</label>
+          <select class="ctl" id="category"></select>
+          <div class="help" id="catHelp">Pick the closest type, or choose "Something else" and Claude researches your idea.</div>
+          <div class="customwrap" id="customCatWrap" hidden>
+            <div class="tip">${spark}<span>Claude will research competitors, prices, customer needs and costs for this idea before running the numbers.</span></div>
+            <div class="field"><label for="customCategory">Type of business</label><input class="ctl" id="customCategory" placeholder="e.g. EV charging hub, bubble tea kiosk, tuition centre"></div>
+            <div class="field"><label for="customUnit">What counts as one sale? <span style="font-weight:400;color:var(--ink-3)">Optional</span></label><input class="ctl" id="customUnit" placeholder="e.g. charging session, cup, student per month"></div>
+          </div>
+          <div class="err" id="customErr"></div>
+        </div>
+        <div class="field">
+          <label for="differentiator">What makes it different? <span style="font-weight:400;color:var(--ink-3)">Optional</span></label>
+          <input class="ctl" id="differentiator" placeholder="e.g. Millet-based recipes, pause-anytime plans">
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><span class="step-n">2</span><h3>The market</h3></div>
+        <div class="row">
+          <div class="field"><label for="city">City</label><select class="ctl" id="city"></select></div>
+          <div class="field"><label for="segment">Customers</label><select class="ctl" id="segment"></select></div>
+        </div>
+        <div class="customwrap" id="customCityWrap" hidden>
+          <div class="field"><label for="customCity">Which city or town?</label><input class="ctl" id="customCity" placeholder="e.g. Indore, Kochi, IIT Bombay campus"></div>
+        </div>
+        <div class="err" id="cityErr">Enter the city or town you want to launch in.</div>
+        <div class="field">
+          <span id="lmLabel" style="display:block;font-weight:600;font-size:13px;margin-bottom:5px">How will you sell?</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lmLabel">
+            <input type="radio" name="lm" id="lm1" value="physical" checked><label for="lm1">${store}Outlet</label>
+            <input type="radio" name="lm" id="lm2" value="hybrid"><label for="lm2">${mix}Hybrid</label>
+            <input type="radio" name="lm" id="lm3" value="online"><label for="lm3">${phone}Online-first</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><span class="step-n">3</span><h3>The money</h3></div>
+        <div class="field">
+          <label for="price">Your price</label>
+          <div class="affix"><span>₹</span><input id="price" type="number" min="1" inputmode="numeric"><span id="unitHint">per meal</span></div>
+          <div class="pricebar" aria-hidden="true"><div class="track"></div><div id="ticks"></div><div class="me" id="me"></div><div class="ends"><span id="pmin"></span><span id="pmax"></span></div></div>
+          <div class="price-note" id="priceNote"></div>
+          <div class="err" id="priceErr">Enter a price above zero.</div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="customers">Customers a month</label><div class="affix"><input id="customers" type="number" min="1" inputmode="numeric" style="padding-left:12px"><span>target</span></div></div>
+          <div class="field"><label for="budget">Budget</label><div class="affix"><span>₹</span><input id="budget" type="number" min="0.5" step="0.5" inputmode="decimal"><span>lakh</span></div></div>
+        </div>
+        <div class="err" id="numErr">Customers and budget need to be above zero.</div>
+      </div>
+
+      <div class="step">
+        <div class="step-h"><span class="step-n">4</span><h3>Customer interviews <span style="font-weight:400;font-size:13px;color:var(--ink-3)">Optional</span></h3></div>
+        <p class="help" style="margin:2px 0 0">Talked to potential customers? Add the results and the assumption check uses them. The report includes an interview guide if you haven't yet.</p>
+        <div class="row">
+          <div class="field"><label for="interviews">People interviewed</label><div class="affix"><input id="interviews" type="number" min="0" inputmode="numeric" style="padding-left:12px"><span>people</span></div></div>
+          <div class="field"><label for="would_buy_pct">Would buy at your price</label><div class="affix"><input id="would_buy_pct" type="number" min="0" max="100" inputmode="numeric" style="padding-left:12px"><span>%</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="brief-foot">
+      <div class="mode">
+        <label class="switch"><input type="checkbox" id="aiToggle" checked><span class="tr"></span><span>AI agent</span></label>
+        <small id="modeNote">Claude researches with tools and writes the strategy</small>
+      </div>
+      <button class="run" id="runBtn" type="submit"><span class="spin"></span><span id="runTxt">Analyse my idea</span></button>
+    </div>
+  </form>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+    <section class="panel empty" id="empty">
+      <div>
+        <h1>Find out if your idea can launch, before you sign a lease.</h1>
+        <p class="lead">The agent researches your local market, sizes up competitors and their prices, works out what customers are missing, and runs the numbers on costs, break-even and cash runway.</p>
+        <div class="gets">
+          <div class="get"><span class="gi">${gauge}</span><div><b>A launch verdict you can argue with</b><span>A score out of 100, broken into five parts, with every number traceable.</span></div></div>
+          <div class="get"><span class="gi">${tag}</span><div><b>Where your price sits</b><span>Visible competitor prices and the gaps they leave open.</span></div></div>
+          <div class="get"><span class="gi">${calendar}</span><div><b>A 90-day plan and what to test first</b><span>Risks, mitigations and the assumptions to validate.</span></div></div>
+        </div>
+      </div>
+      <svg class="art" viewBox="0 0 420 320" aria-hidden="true">
+        <rect x="20" y="40" width="380" height="250" rx="22" fill="#fff" stroke="#DFE3EE"/>
+        <rect x="44" y="66" width="150" height="12" rx="6" fill="#E8EAFD"/><rect x="44" y="88" width="100" height="10" rx="5" fill="#EDF0F6"/>
+        <path d="M70 220 a70 70 0 0 1 140 0" fill="none" stroke="#EDF0F6" stroke-width="18" stroke-linecap="round"/>
+        <path d="M70 220 a70 70 0 0 1 112 -56" fill="none" stroke="#3D4BE0" stroke-width="18" stroke-linecap="round"/>
+        <text x="140" y="215" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="750" font-size="36" fill="#1B2140">72</text>
+        <rect x="240" y="120" width="130" height="12" rx="6" fill="#EDF0F6"/><rect x="240" y="120" width="104" height="12" rx="6" fill="#14895B"/>
+        <rect x="240" y="146" width="130" height="12" rx="6" fill="#EDF0F6"/><rect x="240" y="146" width="70" height="12" rx="6" fill="#C77A12"/>
+        <rect x="240" y="172" width="130" height="12" rx="6" fill="#EDF0F6"/><rect x="240" y="172" width="92" height="12" rx="6" fill="#3D4BE0"/>
+        <rect x="240" y="198" width="130" height="12" rx="6" fill="#EDF0F6"/><rect x="240" y="198" width="118" height="12" rx="6" fill="#14895B"/>
+        <rect x="44" y="246" width="96" height="22" rx="11" fill="#E2F4EC"/><text x="92" y="261" text-anchor="middle" font-family="Figtree" font-weight="700" font-size="11" fill="#14895B">GO</text>
+        <circle cx="352" cy="58" r="30" fill="#FDF1E1"/><path d="M340 64l8-14 8 9 8-6" fill="none" stroke="#E8912A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </section>
+
+    <section class="panel" id="traceCard" style="display:none" aria-live="polite">
+      <div class="panel-h"><div><h2 id="traceTitle">Running the analysis</h2><p id="traceSub"></p></div></div>
+      <div class="rail" id="rail"><div class="fillbar" id="fillbar"></div></div>
+      <div class="calls" id="calls"><h4>Tools Claude called</h4><div id="callList"></div></div>
+    </section>
+
+    <div class="notice" id="notice">${info}<span id="noticeTxt"></span></div>
+
+    <div id="report">
+      <nav class="tabs" id="tabs" aria-label="Report sections">
+        <button data-go="overview" class="on">Overview</button>
+        <button data-go="market">Market</button>
+        <button data-go="competitors">Competitors</button>
+        <button data-go="customers">Customers</button>
+        <button data-go="bm">Business model</button>
+        <button data-go="costs">Costs</button>
+        <button data-go="economics">Economics</button>
+        <button data-go="assumptions">Assumptions</button>
+        <button data-go="plan">Validate &amp; plan</button>
+        <span class="sp"></span>
+        <button class="btn dl" type="button" id="pdfBtn">${download}<span id="pdfTxt">Download PDF report</span></button>
+      </nav>
+
+      <section class="panel" data-tab="overview">
+        <div class="verdict">
+          <div class="gauge">
+            <svg viewBox="0 0 280 160" aria-hidden="true">
+              <path d="M30 145 A110 110 0 0 1 250 145" fill="none" stroke="#EDF0F6" stroke-width="22" stroke-linecap="round"/>
+              <path d="M30 145 A110 110 0 0 1 250 145" fill="none" stroke="#FBE7E5" stroke-width="22" stroke-dasharray="172.8 400"/>
+              <path id="garc" d="M30 145 A110 110 0 0 1 250 145" fill="none" stroke="#3D4BE0" stroke-width="22" stroke-linecap="round" stroke-dasharray="0 400" style="transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1)"/>
+              <g id="needle" style="transform-origin:140px 145px;transform:rotate(-90deg);transition:transform .9s cubic-bezier(.2,.8,.2,1)"><line x1="140" y1="145" x2="140" y2="78" stroke="#1B2140" stroke-width="3" stroke-linecap="round"/><circle cx="140" cy="145" r="7" fill="#1B2140"/></g>
+              <text x="26" y="158" font-size="10" fill="#7C83A3" font-family="Figtree">0</text><text x="246" y="158" font-size="10" fill="#7C83A3" font-family="Figtree">100</text>
+            </svg>
+            <div class="gv"><b id="scoreN">0</b><span>launch score</span></div>
+          </div>
+          <div>
+            <span class="chip" id="pill"></span><span class="idea-q" id="ideaLine"></span>
+            <div class="headline" id="headline"></div>
+            <div id="bars"></div>
+            <div class="src-tag" id="srcTag"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid2" data-tab="market">
+        <section class="panel">
+          <div class="panel-h"><div><h2>How many customers can you reach?</h2><p id="mktSub"></p></div></div>
+          <div class="funnel" id="funnel"></div>
+          <div class="foot" id="funnelFoot">Population × segment share × category adoption × digital reach, then one outlet's catchment and a realistic capture rate.</div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><div><h2>Where your price sits</h2><p id="posSub"></p></div></div>
+          <div class="chart"><canvas id="cPrice" aria-label="Price comparison chart"></canvas></div>
+        </section>
+      </div>
+
+      <section class="panel" data-tab="competitors">
+        <div class="panel-h"><div><h2>Competitors near you</h2><p>Visible prices, ratings, and the gaps you can attack</p></div></div>
+        <div class="tblwrap"><table id="tComp"></table></div>
+      </section>
+
+      <div class="grid2" data-tab="customers">
+        <section class="panel">
+          <div class="panel-h"><div><h2>What customers need</h2><p>Importance vs. how well today's players deliver it (1–5)</p></div></div>
+          <div class="legend"><span><i style="background:var(--primary-soft)"></i>Importance</span><span><i style="background:var(--ink-3)"></i>Current satisfaction</span><span><i style="background:var(--you-soft)"></i>Gap = your opening</span></div>
+          <div class="needs" id="needs"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><div><h2>Where to win</h2></div></div>
+          <p class="positioning" id="positioning"></p>
+          <ul class="opps" id="opps"></ul>
+        </section>
+      </div>
+
+      <section class="panel" data-tab="bm">
+        <div class="panel-h"><div><h2>Your business model</h2><p>A one-page canvas developed from the market, competitor, needs and cost analysis</p></div><span class="src-tag" id="bmSrc" style="margin:0"></span></div>
+        <div class="canvas" id="canvas"></div>
+      </section>
+
+      <section class="panel" data-tab="costs">
+        <div class="panel-h"><div><h2>What it will cost</h2><p id="costSub"></p></div></div>
+        <div class="costgrid">
+          <div><h3>One-time setup</h3><div class="stack" id="capexStack"></div><table id="tCapex"></table></div>
+          <div><h3>Every month</h3><div class="stack" id="fixedStack"></div><table id="tFixed"></table></div>
+          <div><h3>On every sale</h3><table id="tVar"></table></div>
+        </div>
+        <div class="costnote" id="costnote"></div>
+      </section>
+
+      <div class="grid2" data-tab="economics">
+        <section class="panel">
+          <div class="panel-h"><div><h2>Cash over 36 months</h2><p id="cashSub"></p></div></div>
+          <div class="chart"><canvas id="cCash" aria-label="Cumulative cash chart"></canvas></div>
+          <div class="foot">Volume ramps from 25% in month 1 to full by month 6. Launch marketing runs in months 1–3.</div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><div><h2>Profit at different prices</h2><p>Monthly steady-state profit, with demand adjusting to price</p></div></div>
+          <div class="chart"><canvas id="cSweep" aria-label="Price sensitivity chart"></canvas></div>
+          <p class="foot" id="pricing" style="color:var(--ink)"></p>
+        </section>
+      </div>
+
+      <section class="panel" data-tab="assumptions">
+        <div class="panel-h"><div><h2>Assumption check</h2><p>Every assumption behind the numbers, where it came from, and whether it holds up</p></div></div>
+        <div class="chkcounts" id="chkCounts"></div>
+        <div class="tblwrap"><table class="chk" id="tChecks"></table></div>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><div><h2>What if you're wrong?</h2><p id="sensSub"></p></div></div>
+        <div class="chart" style="height:300px"><canvas id="cSens" aria-label="Sensitivity of monthly profit"></canvas></div>
+        <p class="foot">Each bar re-runs the full model with one assumption made worse. The longest bars are the assumptions to validate first.</p>
+      </section>
+
+      <section class="panel" data-tab="plan">
+        <div class="panel-h"><div><h2>Questions to validate before you spend money</h2><p>Highest priority first, each with a cheap experiment and a success signal</p></div><span class="src-tag" id="vqSrc" style="margin:0"></span></div>
+        <div class="tblwrap"><table class="vqtable" id="tVQ"></table></div>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><div><h2>Customer interview guide</h2><p>Ask about what people actually did, not what they say they'd do. Enter your results in step 4 of the brief.</p></div></div>
+        <ol class="guide" id="guide"></ol>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><div><h2>Risks to manage</h2></div></div>
+        <div class="risks" id="risks"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><div><h2>Your first 90 days</h2><p>Tick tasks off as you go</p></div></div>
+        <div class="plan" id="plan"></div>
+
+      </section>
+      <div class="disclaimer">${info}<span id="footer"></span></div>
+    </div>
+  </main>
+</div>
+</div><!-- /appView -->
+<div class="toast" id="toast" role="status">${check}<span id="toastTxt"></span></div>
+
+<script>
+/* ===================== DEMO DATASET (illustrative, not real market data) ===================== */
+const DATA = {
+  cities: {
+    pilani_campus: { name: "BITS Pilani campus", campus: true, pop_m: 0.0065, priceIdx: 0.8, rent: 30, wageIdx: 0.7, digital: 0.92,
+      segShare: { students: 0.85, young_professionals: 0.1, families: 0.04, premium: 0.01 }, catchment: 0.7, capture: 0.35, freqMult: 2.5, adoptMult: 1.6, capexMult: 0.6,
+      localities: ["C'not (campus market)", "Student Activity Centre", "Hostel blocks", "Main gate", "Library area", "Pilani town market"],
+      competitors: {
+        specialty_cafe: [
+          { name: "Campus canteen", type: "Institutional canteen", price: 60, rating: 3.6, reviews: 0, channel: "Walk-in", strengths: "Cheap, central", gaps: "Basic coffee, crowded at peak" },
+          { name: "C'not café stalls", type: "Campus food stalls", price: 90, rating: 3.9, reviews: 0, channel: "Walk-in", strengths: "Close to hostels, open late", gaps: "No seating to study, limited menu" },
+          { name: "Night canteen", type: "Late-night outlet", price: 80, rating: 3.8, reviews: 0, channel: "Walk-in", strengths: "Open late", gaps: "Unhygienic perception, no coffee quality" },
+          { name: "Town café (outside gate)", type: "Independent café", price: 150, rating: 4.0, reviews: 0, channel: "Dine-in", strengths: "Proper café ambience", gaps: "Walk outside campus, closes early" },
+          { name: "Delivery from town", type: "Aggregator delivery", price: 180, rating: 3.7, reviews: 0, channel: "Aggregators", strengths: "Variety", gaps: "Slow, delivery fees, cold coffee" },
+          { name: "Instant coffee in hostel", type: "DIY substitute", price: 15, rating: 3.2, reviews: 0, channel: "Self-made", strengths: "Almost free", gaps: "Poor taste, no social space" }],
+        healthy_meals: [
+          { name: "Hostel mess", type: "Institutional mess", price: 80, rating: 3.2, reviews: 0, channel: "Prepaid mess", strengths: "Prepaid, included in fees", gaps: "Repetitive, low protein, fixed timings" },
+          { name: "Campus canteen", type: "Institutional canteen", price: 90, rating: 3.6, reviews: 0, channel: "Walk-in", strengths: "Cheap, central", gaps: "Fried, not 'healthy'" },
+          { name: "C'not food stalls", type: "Campus food stalls", price: 110, rating: 3.9, reviews: 0, channel: "Walk-in", strengths: "Tasty, open late", gaps: "Unhealthy options, no nutrition info" },
+          { name: "Tiffin service from town", type: "Home-style tiffin", price: 100, rating: 3.8, reviews: 0, channel: "WhatsApp orders", strengths: "Home-style, affordable", gaps: "Inconsistent delivery to hostels" },
+          { name: "Delivery from town", type: "Aggregator delivery", price: 200, rating: 3.6, reviews: 0, channel: "Aggregators", strengths: "Variety", gaps: "Expensive, slow, few healthy options" },
+          { name: "Protein shakes / packaged", type: "Packaged substitute", price: 120, rating: 3.9, reviews: 0, channel: "Retail / online", strengths: "High protein, convenient", gaps: "Not a meal, expensive per serving" }] } },
+    bengaluru: { name: "Bengaluru", minWage: 23376, minWageSource: "Karnataka revised minimum wage for unskilled workers, Greater Bengaluru (2026)", pop_m: 13.6, priceIdx: 1.15, rent: 140, wageIdx: 1.15, digital: 0.82, localities: ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "Jayanagar", "Hebbal"] },
+    pune:      { name: "Pune",      pop_m: 7.4,  priceIdx: 1.0,  rent: 95,  wageIdx: 1.0,  digital: 0.76, localities: ["Koregaon Park", "Baner", "Viman Nagar", "Kothrud", "Hinjewadi", "Aundh"] },
+    hyderabad: { name: "Hyderabad", pop_m: 10.8, priceIdx: 1.0,  rent: 100, wageIdx: 1.0,  digital: 0.78, localities: ["Jubilee Hills", "Gachibowli", "Madhapur", "Kondapur", "Banjara Hills", "Kukatpally"] },
+    jaipur:    { name: "Jaipur",    pop_m: 4.2,  priceIdx: 0.85, rent: 65,  wageIdx: 0.85, digital: 0.62, localities: ["C-Scheme", "Malviya Nagar", "Vaishali Nagar", "Mansarovar", "Raja Park", "Tonk Road"] }
+  },
+  segments: {
+    students:            { name: "College students",        share: 0.12, priceSens: 1.4 },
+    young_professionals: { name: "Young professionals",     share: 0.18, priceSens: 1.0 },
+    families:            { name: "Families / households",   share: 0.40, priceSens: 1.1 },
+    premium:             { name: "Affluent / premium buyers", share: 0.06, priceSens: 0.6 }
+  },
+  categories: {
+    healthy_meals: {
+      name: "Healthy meals (cloud kitchen / subscription)", unit: "meal", freq: 8, cogs: 0.38, commission: 0.22,
+      adoption: 0.10, growth: 0.18, capacity: 3000, area: 400, staff: 6, wage: 18000, utilities: 25000,
+      capex: { "Kitchen equipment": 600000, "Fit-out & interiors": 300000, "Licences (FSSAI, trade, fire)": 50000, "Branding, website & app": 150000 },
+      competitors: [
+        { name: "GreenBowl Kitchens", type: "Cloud kitchen chain", price: 260, rating: 4.2, reviews: 5400, channel: "Aggregators", strengths: "Fast delivery, wide menu", gaps: "Calorie info inconsistent" },
+        { name: "FitFuel Subscriptions", type: "Meal subscription", price: 340, rating: 4.4, reviews: 2100, channel: "Own app", strengths: "Macro-tracked plans", gaps: "Rigid weekly plans, no pause" },
+        { name: "Salad Story Co.", type: "Salad QSR", price: 290, rating: 4.0, reviews: 3800, channel: "Dine-in + delivery", strengths: "Fresh, visible prep", gaps: "Small portions, repetitive" },
+        { name: "Ghar Ka Khana Tiffins", type: "Home-style tiffin", price: 140, rating: 4.1, reviews: 900, channel: "WhatsApp orders", strengths: "Very affordable", gaps: "Not 'healthy' positioned, erratic quality" },
+        { name: "ProteinPlate", type: "D2C high-protein", price: 420, rating: 4.3, reviews: 1200, channel: "Own app", strengths: "Gym-focused, high protein", gaps: "Expensive, limited veg options" },
+        { name: "Daily Millet Bowl", type: "Millet-based kitchen", price: 220, rating: 3.9, reviews: 650, channel: "Aggregators", strengths: "Regional, millet-forward", gaps: "Low awareness, taste concerns" }
+      ],
+      needs: [
+        { need: "Clear nutrition / calorie information", importance: 4.4, satisfaction: 2.8, seg: { premium: 0.3, young_professionals: 0.2 } },
+        { need: "Affordable everyday price", importance: 4.0, satisfaction: 3.0, seg: { students: 0.8, families: 0.3, premium: -0.8 } },
+        { need: "Taste that doesn't feel like 'diet food'", importance: 4.6, satisfaction: 3.1, seg: {} },
+        { need: "Flexible subscription (pause / skip)", importance: 3.8, satisfaction: 2.4, seg: { young_professionals: 0.4 } },
+        { need: "Reliable delivery time", importance: 4.2, satisfaction: 3.7, seg: { young_professionals: 0.3 } },
+        { need: "Portion size that keeps you full", importance: 3.9, satisfaction: 2.9, seg: { students: 0.4 } }
+      ]
+    },
+    specialty_cafe: {
+      name: "Specialty coffee café", unit: "order", freq: 4, cogs: 0.30, commission: 0.22,
+      adoption: 0.15, growth: 0.14, capacity: 4500, area: 900, staff: 7, wage: 17000, utilities: 40000,
+      capex: { "Espresso machine & grinders": 650000, "Fit-out & interiors": 900000, "Furniture & fixtures": 250000, "Licences & POS": 80000 },
+      competitors: [
+        { name: "Third Wave Roasters", type: "Specialty chain", price: 380, rating: 4.4, reviews: 8200, channel: "Dine-in", strengths: "Brand, consistent quality", gaps: "Crowded, pricey" },
+        { name: "Blue Tokai-style roastery", type: "Roaster café", price: 360, rating: 4.5, reviews: 4100, channel: "Dine-in + beans D2C", strengths: "Bean quality, merch", gaps: "Limited food" },
+        { name: "Café Coffee Corner", type: "Mass chain", price: 220, rating: 3.8, reviews: 6000, channel: "Dine-in", strengths: "Ubiquitous, affordable", gaps: "Dated experience" },
+        { name: "Brew & Books", type: "Independent café", price: 300, rating: 4.3, reviews: 1500, channel: "Dine-in", strengths: "Work-friendly, cosy", gaps: "Slow service at peak" },
+        { name: "Kopi Cart", type: "Kiosk / grab-and-go", price: 160, rating: 4.1, reviews: 900, channel: "Kiosk + delivery", strengths: "Cheap, fast", gaps: "No seating" },
+        { name: "The Daily Grind", type: "Independent café", price: 280, rating: 4.0, reviews: 1100, channel: "Dine-in + delivery", strengths: "Good food menu", gaps: "Average coffee" }
+      ],
+      needs: [
+        { need: "Consistently good coffee", importance: 4.5, satisfaction: 3.6, seg: { premium: 0.3 } },
+        { need: "Place to work / sit for long", importance: 4.0, satisfaction: 2.9, seg: { students: 0.6, young_professionals: 0.5 } },
+        { need: "Value for money", importance: 4.1, satisfaction: 2.8, seg: { students: 0.8, families: 0.3, premium: -0.9 } },
+        { need: "Quick grab-and-go at peak hours", importance: 3.7, satisfaction: 2.7, seg: { young_professionals: 0.5 } },
+        { need: "Good food pairing beyond pastries", importance: 3.6, satisfaction: 3.0, seg: { families: 0.5 } },
+        { need: "Distinct ambience / 'third place'", importance: 3.8, satisfaction: 3.3, seg: { premium: 0.5, students: 0.3 } }
+      ]
+    },
+    pet_grooming: {
+      name: "Pet grooming & care studio", unit: "session", freq: 1, cogs: 0.15, commission: 0.12,
+      adoption: 0.08, growth: 0.22, capacity: 320, area: 600, staff: 4, wage: 20000, utilities: 22000,
+      capex: { "Grooming tables, dryers & tubs": 350000, "Fit-out & plumbing": 300000, "Mobile van (optional share)": 100000, "Licences, booking app": 60000 },
+      competitors: [
+        { name: "Pawfect Spa", type: "Premium grooming studio", price: 1800, rating: 4.5, reviews: 1300, channel: "Walk-in + app", strengths: "Premium experience", gaps: "Booking wait 5–7 days" },
+        { name: "Doorstep Groomers", type: "Home-visit service", price: 1400, rating: 4.1, reviews: 2600, channel: "App", strengths: "Convenient at home", gaps: "Groomer quality varies" },
+        { name: "PetMart Salon", type: "Pet-store salon", price: 1100, rating: 3.9, reviews: 1900, channel: "Walk-in", strengths: "Bundled with store", gaps: "Rushed, crowded" },
+        { name: "Wag & Wash", type: "Self-wash + grooming", price: 900, rating: 4.0, reviews: 600, channel: "Walk-in", strengths: "Cheap, DIY option", gaps: "Limited breeds handled" },
+        { name: "VetCare Grooming", type: "Vet clinic add-on", price: 1500, rating: 4.3, reviews: 800, channel: "Clinic", strengths: "Medical trust", gaps: "Clinical feel, limited slots" },
+        { name: "Furry Tales Mobile", type: "Mobile van", price: 2100, rating: 4.4, reviews: 450, channel: "App", strengths: "Van comes to you", gaps: "Small coverage area" }
+      ],
+      needs: [
+        { need: "Gentle handling / pet safety", importance: 4.8, satisfaction: 3.4, seg: {} },
+        { need: "Easy booking with short wait", importance: 4.1, satisfaction: 2.7, seg: { young_professionals: 0.4 } },
+        { need: "Transparent pricing by breed/size", importance: 3.9, satisfaction: 2.6, seg: { families: 0.3, students: 0.4 } },
+        { need: "Pick-up / home service", importance: 3.8, satisfaction: 3.0, seg: { young_professionals: 0.5, premium: 0.4 } },
+        { need: "Trained, certified groomers", importance: 4.3, satisfaction: 3.0, seg: { premium: 0.4 } },
+        { need: "Photo/video updates during session", importance: 3.2, satisfaction: 2.2, seg: { young_professionals: 0.4 } }
+      ]
+    },
+    fitness_studio: {
+      name: "Boutique fitness studio", unit: "membership-month", freq: 1, cogs: 0.08, commission: 0.10,
+      adoption: 0.05, growth: 0.15, capacity: 380, area: 1800, staff: 6, wage: 25000, utilities: 45000,
+      capex: { "Equipment": 1200000, "Fit-out, flooring, AV": 900000, "Changing rooms & showers": 300000, "Licences, booking software": 80000 },
+      competitors: [
+        { name: "CultFit-style centre", type: "Multi-format chain", price: 2600, rating: 4.2, reviews: 9100, channel: "App", strengths: "Variety, pass flexibility", gaps: "Crowded batches" },
+        { name: "Iron Republic Gym", type: "Big-box gym", price: 1800, rating: 3.9, reviews: 3400, channel: "Walk-in", strengths: "Cheap annual plans", gaps: "Little coaching" },
+        { name: "Pilates Lab", type: "Reformer pilates", price: 6500, rating: 4.7, reviews: 500, channel: "Walk-in + app", strengths: "Premium, small groups", gaps: "Very expensive" },
+        { name: "Yoga Shala", type: "Yoga studio", price: 2200, rating: 4.5, reviews: 1100, channel: "Walk-in", strengths: "Community, instructors", gaps: "Limited timings" },
+        { name: "HIIT Box", type: "Functional training", price: 3800, rating: 4.4, reviews: 700, channel: "App", strengths: "Results-driven", gaps: "Intimidating for beginners" },
+        { name: "Zumba Junction", type: "Dance fitness", price: 1600, rating: 4.0, reviews: 900, channel: "Walk-in", strengths: "Fun, social", gaps: "Plateaus for regulars" }
+      ],
+      needs: [
+        { need: "Personal attention / coaching", importance: 4.4, satisfaction: 2.8, seg: { premium: 0.4 } },
+        { need: "Convenient batch timings", importance: 4.3, satisfaction: 3.0, seg: { young_professionals: 0.5 } },
+        { need: "Affordable plans / no lock-in", importance: 4.0, satisfaction: 2.6, seg: { students: 0.8, families: 0.2, premium: -0.9 } },
+        { need: "Visible progress tracking", importance: 3.7, satisfaction: 2.5, seg: { young_professionals: 0.3 } },
+        { need: "Beginner-friendly environment", importance: 3.9, satisfaction: 2.9, seg: { families: 0.5 } },
+        { need: "Clean facilities & showers", importance: 4.1, satisfaction: 3.2, seg: { premium: 0.4 } }
+      ]
+    },
+    coworking: {
+      name: "Coworking space", unit: "seat-month", freq: 1, cogs: 0.12, commission: 0.08,
+      adoption: 0.03, growth: 0.16, capacity: 140, area: 3000, staff: 4, wage: 22000, utilities: 90000,
+      capex: { "Furniture & workstations": 1500000, "Fit-out, cabling, AC": 1600000, "Meeting rooms & AV": 400000, "Access control, Wi-Fi, software": 200000 },
+      competitors: [
+        { name: "WorkHub (national chain)", type: "Managed office", price: 11000, rating: 4.3, reviews: 2600, channel: "Sales team", strengths: "Brand, multiple centres", gaps: "Long lock-ins" },
+        { name: "DeskNest", type: "Mid-market coworking", price: 7500, rating: 4.2, reviews: 900, channel: "Online + broker", strengths: "Good value", gaps: "Noisy, packed" },
+        { name: "The Garage Collective", type: "Startup-focused", price: 6500, rating: 4.4, reviews: 500, channel: "Community", strengths: "Events, networking", gaps: "Basic amenities" },
+        { name: "Café-Cowork Hybrid", type: "Café with desks", price: 4000, rating: 3.9, reviews: 700, channel: "Walk-in", strengths: "Cheap day passes", gaps: "Unreliable Wi-Fi, no privacy" },
+        { name: "Regus-style Business Centre", type: "Premium serviced office", price: 14000, rating: 4.1, reviews: 1500, channel: "Sales team", strengths: "Prime locations", gaps: "Corporate, expensive" },
+        { name: "BuildSpace", type: "Neighbourhood coworking", price: 5500, rating: 4.0, reviews: 300, channel: "Online", strengths: "Close to residential areas", gaps: "Few meeting rooms" }
+      ],
+      needs: [
+        { need: "Reliable high-speed internet & power backup", importance: 4.7, satisfaction: 3.5, seg: {} },
+        { need: "Flexible plans (day / week passes)", importance: 4.1, satisfaction: 2.9, seg: { students: 0.5, young_professionals: 0.3 } },
+        { need: "Quiet zones / call booths", importance: 4.2, satisfaction: 2.6, seg: { young_professionals: 0.3 } },
+        { need: "Near home (short commute)", importance: 4.0, satisfaction: 2.8, seg: { families: 0.6 } },
+        { need: "Affordable price", importance: 4.0, satisfaction: 3.0, seg: { students: 0.8, premium: -0.9 } },
+        { need: "Community & networking events", importance: 3.3, satisfaction: 3.0, seg: { students: 0.4 } }
+      ]
+    }
+  }
+};
+
+/* ===================== HELPERS ===================== */
+const clamp = (x, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, x));
+const median = a => { const s = [...a].sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const rnd = (x, d = 0) => { const f = 10 ** d; return Math.round(x * f) / f; };
+const CHANNEL_SHARE = { physical: 0.2, hybrid: 0.5, online: 1.0 };
+
+/* ===================== TOOLS (the agent's data-access layer) ===================== */
+const freqOf = (city, category) => DATA.categories[category].freq * ((DATA.cities[city] && DATA.cities[city].freqMult) || 1);
+function toolMarketProfile({ city, category, segment }) {
+  const c = DATA.cities[city], k = DATA.categories[category], s = DATA.segments[segment];
+  const segmentPop = c.pop_m * 1e6 * ((c.segShare && c.segShare[segment]) ?? s.share);
+  const adoption = Math.min(0.9, k.adoption * (c.adoptMult || 1));
+  const addressable = segmentPop * adoption * (0.6 + 0.5 * c.digital);
+  return {
+    city: c.name, category: k.name, segment: s.name,
+    city_population: Math.round(c.pop_m * 1e6), segment_population: Math.round(segmentPop),
+    market_type: c.campus ? "campus (captive, dense market)" : "city",
+    category_adoption_rate: rnd(adoption, 3), addressable_customers: Math.round(addressable),
+    catchment_share: c.catchment || 0.04, realistic_capture_rate: c.capture || 0.08,
+    serviceable_customers_one_outlet: Math.round(addressable * (c.catchment || 0.04)),
+    category_growth_yoy: k.growth, digital_adoption_index: c.digital, price_index_vs_pune: c.priceIdx,
+    segment_price_sensitivity: s.priceSens, unit: k.unit, typical_frequency_per_month: rnd(freqOf(city, category), 1),
+    note: "Demo dataset - illustrative figures"
+  };
+}
+
+function toolCompetitors({ city, category }) {
+  const c = DATA.cities[city], k = DATA.categories[category];
+  if (c.competitors && c.competitors[category]) return c.competitors[category].map((x, i) => ({ ...x, locality: c.localities[i % c.localities.length] }));
+  return k.competitors.map((x, i) => ({
+    ...x, locality: c.localities[i % c.localities.length],
+    price: Math.round(x.price * c.priceIdx / 10) * 10
+  }));
+}
+
+function toolCustomerNeeds({ category, segment }) {
+  return DATA.categories[category].needs.map(n => {
+    const imp = clamp(n.importance + (n.seg[segment] || 0), 1, 5);
+    const gap = Math.max(imp - n.satisfaction, 0);
+    return { need: n.need, importance: rnd(imp, 1), current_satisfaction: n.satisfaction, gap: rnd(gap, 1), opportunity_score: rnd(imp + gap, 1) };
+  }).sort((a, b) => b.opportunity_score - a.opportunity_score);
+}
+
+function toolCostAssumptions({ city, category, launch_model }, ov = {}) {
+  const c = DATA.cities[city], k = DATA.categories[category];
+  const online = launch_model === "online";
+  const area = Math.round(k.area * (online ? 0.6 : 1) * (c.campus ? 0.7 : 1));
+  const rentPerSqft = Math.round(c.rent * (online ? 0.7 : 1) * (ov.rentMult || 1));
+  const rent = area * rentPerSqft;
+  const wagePerStaff = Math.round(k.wage * c.wageIdx * (ov.wageMult || 1));
+  const staffCost = Math.round(k.staff * wagePerStaff * (c.campus ? 0.8 : 1));
+  const fixed = {
+    "Rent": rent,
+    "Staff salaries": staffCost,
+    "Utilities": Math.round(k.utilities * c.wageIdx),
+    "Software, POS & subscriptions": 8000,
+    "Maintenance & misc.": Math.round(0.05 * (rent + staffCost))
+  };
+  const capex = {};
+  for (const [kk, v] of Object.entries(k.capex)) capex[kk] = Math.round(v * (online ? 0.7 : 1) * (0.9 + 0.1 * c.priceIdx) * (c.capexMult || 1));
+  capex["Rent deposit (6 months)"] = rent * 6;
+  const channelShare = CHANNEL_SHARE[launch_model];
+  return {
+    area_sqft: area, rent_per_sqft: rentPerSqft, wage_per_staff: wagePerStaff, staff: k.staff,
+    capex, capex_total: Object.values(capex).reduce((a, b) => a + b, 0),
+    fixed_monthly: fixed, fixed_monthly_total: Object.values(fixed).reduce((a, b) => a + b, 0),
+    variable: { cogs_pct: k.cogs * (ov.cogsMult || 1), platform_commission_pct: k.commission + (ov.commissionAdd || 0), share_of_orders_via_platforms: channelShare, payment_fees_pct: 0.02, marketing_pct_of_revenue: 0.08 },
+    launch_marketing_monthly_first_3m: Math.round((c.campus ? 40000 : 150000) * c.priceIdx),
+    capacity_units_per_month: k.capacity
+  };
+}
+
+/* Unit economics + 24-month cash flow for a given price and customer target */
+function toolUnitEconomics(inp, overrides = {}) {
+  const { city, category, segment, launch_model } = inp;
+  const price = overrides.price ?? inp.price;
+  const k = DATA.categories[category], s = DATA.segments[segment];
+  const costs = toolCostAssumptions({ city, category, launch_model }, overrides);
+  const comps = toolCompetitors({ city, category });
+  const freq = freqOf(city, category);
+  const mkt = toolMarketProfile({ city, category, segment });
+  const med = median(comps.map(c => c.price));
+  const elasticity = 1.2 * s.priceSens;
+  // Demand adjusts if the tested price deviates from the user's own price
+  const demandMult = overrides.fixedDemand ? 1 : Math.pow(price / inp.price, -elasticity);
+  const baseCustomers = overrides.customers ?? inp.customers;
+  const steadyUnits = Math.min(baseCustomers * freq * demandMult * (overrides.demandMult || 1), k.capacity);
+  const v = costs.variable;
+  const varPerUnit = price * (v.cogs_pct + v.share_of_orders_via_platforms * v.platform_commission_pct + v.payment_fees_pct + v.marketing_pct_of_revenue);
+  const contribution = price - varPerUnit;
+  const fixed = costs.fixed_monthly_total;
+  const beUnits = contribution > 0 ? fixed / contribution : Infinity;
+  const months = [], cum = [];
+  let cash = -costs.capex_total, minCash = cash, payback = null;
+  for (let m = 1; m <= 36; m++) {
+    const ramp = Math.min(1, 0.25 + 0.15 * (m - 1));
+    const units = steadyUnits * ramp;
+    const revenue = units * price;
+    const launchMkt = m <= 3 ? costs.launch_marketing_monthly_first_3m : 0;
+    const profit = units * contribution - fixed - launchMkt;
+    cash += profit; minCash = Math.min(minCash, cash);
+    if (payback === null && cash >= 0) payback = m;
+    months.push({ month: m, units: Math.round(units), revenue: Math.round(revenue), profit: Math.round(profit) });
+    cum.push(Math.round(cash));
+  }
+  const steadyProfit = steadyUnits * contribution - fixed;
+  const capitalNeeded = Math.round(-minCash * 1.15); // 15% buffer
+  return {
+    price, competitor_median_price: med, price_vs_median_pct: rnd((price / med - 1) * 100, 1),
+    variable_cost_per_unit: Math.round(varPerUnit), contribution_per_unit: Math.round(contribution),
+    contribution_margin_pct: rnd(contribution / price * 100, 1),
+    fixed_monthly: fixed, breakeven_units_per_month: isFinite(beUnits) ? Math.round(beUnits) : null,
+    breakeven_customers_per_month: isFinite(beUnits) ? Math.round(beUnits / freq) : null, frequency_per_customer: rnd(freq, 1),
+    breakeven_capacity_utilisation_pct: isFinite(beUnits) ? rnd(beUnits / k.capacity * 100, 1) : null,
+    steady_state_units_per_month: Math.round(steadyUnits), steady_state_monthly_revenue: Math.round(steadyUnits * price),
+    steady_state_monthly_profit: Math.round(steadyProfit),
+    capex_total: costs.capex_total, capital_needed_incl_buffer: capitalNeeded,
+    payback_month: payback, cumulative_cash: cum, monthly: months,
+    target_vs_serviceable_pct: rnd(baseCustomers / mkt.serviceable_customers_one_outlet * 100, 1)
+  };
+}
+
+/* ===================== SCORING ===================== */
+function scoreIdea(inp, r) {
+  const { market, comps, needs, econ } = r;
+  const realistic = market.serviceable_customers_one_outlet * market.realistic_capture_rate;
+  const coverage = inp.customers / realistic; // >1 means target exceeds realistic capture
+  const marketScore = clamp(18 + market.category_growth_yoy * 120 + (coverage <= 1 ? 20 : 20 - (coverage - 1) * 30) + (Math.log10(market.addressable_customers) - 4) * 8);
+  const avgRating = comps.reduce((a, c) => a + c.rating, 0) / comps.length;
+  const nearPrice = comps.filter(c => Math.abs(c.price / inp.price - 1) <= 0.15).length;
+  const compScore = clamp(100 - (avgRating - 3.5) * 40 - nearPrice * 9);
+  const needScore = clamp((needs[0].opportunity_score - 4.5) / 3 * 100);
+  const be = econ.breakeven_capacity_utilisation_pct ?? 200;
+  const econScore = clamp(0.5 * clamp(econ.contribution_margin_pct / 60 * 100) + 0.5 * clamp((1 - be / 100) * 140));
+  const fundScore = clamp(inp.budget / econ.capital_needed_incl_buffer * 80);
+  const parts = [
+    { key: "Market attractiveness", score: Math.round(marketScore), weight: 0.2 },
+    { key: "Competitive space", score: Math.round(compScore), weight: 0.15 },
+    { key: "Unmet customer need", score: Math.round(needScore), weight: 0.2 },
+    { key: "Unit economics", score: Math.round(econScore), weight: 0.3 },
+    { key: "Funding fit", score: Math.round(fundScore), weight: 0.15 }
+  ];
+  const total = Math.round(parts.reduce((a, p) => a + p.score * p.weight, 0));
+  let verdict = total >= 70 ? "GO" : total >= 50 ? "REFINE" : "RETHINK";
+  // Hard gates: a loss-making steady state or no payback in 36 months caps the verdict
+  if (econ.steady_state_monthly_profit < 0) verdict = "RETHINK";
+  else if (econ.payback_month === null && verdict === "GO") verdict = "REFINE";
+  return { parts, total, verdict, avgRating: rnd(avgRating, 2), nearPrice, coverage: rnd(coverage, 2), realisticCustomers: Math.round(realistic) };
+}
+
+function priceSweep(inp) {
+  const pts = [];
+  for (let f = 0.6; f <= 1.401; f += 0.05) {
+    const p = Math.round(inp.price * f);
+    const e = toolUnitEconomics(inp, { price: p });
+    pts.push({ price: p, profit: e.steady_state_monthly_profit });
+  }
+  return pts;
+}
+
+/* ===================== FULL ANALYSIS (deterministic core) ===================== */
+function analyse(inp) {
+  const market = toolMarketProfile(inp);
+  const comps = toolCompetitors(inp);
+  const needs = toolCustomerNeeds(inp);
+  const costs = toolCostAssumptions(inp);
+  const econ = toolUnitEconomics(inp);
+  const sweep = priceSweep(inp);
+  const r = { inp, market, comps, needs, costs, econ, sweep };
+  r.score = scoreIdea(inp, r);
+  r.bm = buildBusinessModel(r);
+  r.checks = checkAssumptions(r);
+  r.vplan = validationPlan(r);
+  if (r.score.verdict === "GO" && r.checks.counts.unrealistic > 0) { r.score.verdict = "REFINE"; r.score.capReason = "Capped at REFINE because the assumption check found an unrealistic assumption."; }
+  r.narrative = ruleNarrative(r);
+  return r;
+}
+
+/* ===================== RULE-BASED NARRATIVE (fallback when AI is unavailable) ===================== */
+const inr = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const lakh = n => "₹" + rnd(n / 1e5, 1) + " L";
+
+function ruleNarrative(r) {
+  const { inp, market, comps, needs, econ, score, sweep } = r;
+  const k = DATA.categories[inp.category];
+  const pos = econ.price_vs_median_pct;
+  const posLabel = pos > 15 ? "premium" : pos < -15 ? "value" : "mid-market";
+  const best = sweep.reduce((a, b) => (b.profit > a.profit ? b : a));
+  const top = needs.slice(0, 3);
+  const cheaper = comps.filter(c => c.price < inp.price).length;
+  const headline = {
+    GO: `Promising: the numbers support a launch, and there is a clear opening on "${top[0].need.toLowerCase()}".`,
+    REFINE: `Viable with changes: the market is there, but ${score.parts.slice().sort((a, b) => a.score - b.score)[0].key.toLowerCase()} needs work before you commit capital.`,
+    RETHINK: `High risk as currently framed: ${score.parts.slice().sort((a, b) => a.score - b.score).slice(0, 2).map(p => p.key.toLowerCase()).join(" and ")} are weak.`
+  }[score.verdict];
+
+  const positioning = `At ${inr(inp.price)} per ${k.unit} you are ${Math.abs(pos)}% ${pos >= 0 ? "above" : "below"} the local competitor median (${inr(econ.competitor_median_price)}), a ${posLabel} position. ${cheaper} of ${comps.length} tracked competitors are cheaper. ` +
+    (posLabel === "premium" ? `A premium price has to be earned on the top unmet need, "${top[0].need.toLowerCase()}", and made visible in every touchpoint.` :
+     posLabel === "value" ? `A value price wins trial, but margins are thin, so keep variable costs tight and push frequency.` :
+     `Mid-market pricing puts you head-to-head with the most players, so differentiation on "${top[0].need.toLowerCase()}" is essential.`);
+
+  const opportunities = top.map(n => `${n.need}: importance ${n.importance}/5 vs. market satisfaction ${n.current_satisfaction}/5 (gap ${n.gap}). Build the offer around this.`);
+  if (inp.differentiator) opportunities.push(`Your stated differentiator ("${inp.differentiator}") should map directly onto one of the gaps above. Test it in customer interviews.`);
+
+  const risks = [];
+  if (score.parts[1].score < 55) risks.push({ risk: `Crowded price band: ${score.nearPrice} competitors within ±15% of your price, avg rating ${score.avgRating}.`, mitigation: "Differentiate on the top unmet need and avoid discount wars; use bundles or subscriptions instead of price cuts." });
+  if ((econ.breakeven_capacity_utilisation_pct ?? 999) > 55) risks.push({ risk: `Break-even needs ${econ.breakeven_capacity_utilisation_pct}% capacity utilisation (${econ.breakeven_units_per_month} ${k.unit}s/month).`, mitigation: "Reduce fixed costs (smaller space, shared kitchen/studio, part-time staff) or lift price/frequency." });
+  if (econ.contribution_margin_pct < 40) risks.push({ risk: `Thin contribution margin (${econ.contribution_margin_pct}%).`, mitigation: "Shift orders to direct channels to avoid platform commissions; renegotiate supplier costs." });
+  if (inp.budget < econ.capital_needed_incl_buffer) risks.push({ risk: `Funding gap: need ≈${lakh(econ.capital_needed_incl_buffer)} vs. budget ${lakh(inp.budget)}.`, mitigation: "Phase capex, start lean (online / pop-up) or raise the gap before signing a lease." });
+  if (score.coverage > 1) risks.push({ risk: `Target of ${inp.customers} customers/month exceeds a realistic one-outlet capture (~${score.realisticCustomers}).`, mitigation: "Plan for a lower base case or a second location/delivery zone." });
+  if (econ.payback_month === null) risks.push({ risk: "No payback within 36 months in the base case.", mitigation: "Rework the cost structure or pricing before launch." });
+  if (!risks.length) risks.push({ risk: "Execution risk: the model assumes a 6-month ramp to steady state.", mitigation: "Pre-sell (waitlist, founding memberships) to de-risk the ramp." });
+
+  const plan = [
+    { phase: "Days 1–30 · Validate", actions: [`Run 20–30 interviews with ${DATA.segments[inp.segment].name.toLowerCase()} on "${top[0].need.toLowerCase()}"`, `Mystery-shop the top 3 competitors (${comps.slice(0, 3).map(c => c.name).join(", ")})`, `Smoke-test price at ${inr(inp.price)} vs ${inr(best.price)} with a landing page or pre-orders`] },
+    { phase: "Days 31–60 · Build", actions: [inp.launch_model === "online" ? "Set up kitchen/space + aggregator & own-channel listings" : `Shortlist sites in ${comps.slice(0, 2).map(c => c.locality).join(" / ")} with rent ≤ ${inr(r.costs.rent_per_sqft)}/sqft`, "Lock supplier quotes; confirm COGS assumption of " + Math.round(k.cogs * 100) + "%", "Hire core team; complete licences"] },
+    { phase: "Days 61–90 · Launch", actions: ["Soft launch to waitlist; collect NPS and repeat rate", `Track weekly: ${k.unit}s sold vs break-even ${econ.breakeven_units_per_month}/month`, "Double down on the channel with the lowest CAC"] }
+  ];
+
+  const validate = [
+    `Will ${DATA.segments[inp.segment].name.toLowerCase()} pay ${inr(inp.price)} per ${k.unit}?`,
+    `Is a frequency of ${freqOf(inp.city, inp.category)} ${k.unit}s per customer per month realistic?`,
+    "Actual rent and fit-out quotes vs. the assumptions used here"
+  ];
+  return {
+    source: "rules", headline, positioning, opportunities, risks, plan, validate,
+    pricing: best.price !== inp.price ? `The demand model suggests steady-state profit peaks near ${inr(best.price)} (${inr(best.profit)}/month) vs ${inr(econ.steady_state_monthly_profit)}/month at your price. Treat this as a hypothesis to test.` : `Your price is close to the profit-maximising point in the demand model.`
+  };
+}
+
+
+/* ===================== STAGE: BUSINESS MODEL (develops a lean canvas from the analysis) ===================== */
+function buildBusinessModel(r) {
+  const { inp, comps, needs, costs, econ } = r, k = DATA.categories[inp.category], c = DATA.cities[inp.city], seg = DATA.segments[inp.segment];
+  const topCost = Object.entries(costs.fixed_monthly).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, v]) => `${n} ${inr(v)}/month`);
+  const ch = { physical: ["Walk-in at the outlet", "Local word of mouth and signage"], hybrid: ["Walk-in at the outlet", "Delivery apps", "Own WhatsApp / app ordering"], online: ["Delivery apps", "Own app / WhatsApp ordering", "Social media"] }[inp.launch_model];
+  if (c.campus) ch.push("Student clubs, hostel groups and fest tie-ups");
+  const weakest = comps.slice().sort((a, b) => a.rating - b.rating)[0];
+  return {
+    source: "rules",
+    customer_segments: [`${seg.name} in ${c.name}`, `Early adopters: those who rate "${needs[0].need.toLowerCase()}" as very important`],
+    problems: needs.slice(0, 3).map(n => `${n.need} (importance ${n.importance}/5, met at only ${n.current_satisfaction}/5)`),
+    value_proposition: `${inp.differentiator || k.name} that delivers on "${needs[0].need.toLowerCase()}" better than ${comps.slice(0, 2).map(x => x.name).join(" and ")}.`,
+    channels: ch,
+    revenue_streams: [`${inr(inp.price)} per ${k.unit}, about ${econ.frequency_per_customer} ${k.unit}s per customer a month`, `About ${inr(econ.steady_state_monthly_revenue)} a month at steady state`],
+    cost_structure: [`One-time setup ${lakh(econ.capex_total)}`, ...topCost, `Variable ${Math.round(100 - econ.contribution_margin_pct)}% of each sale`],
+    key_activities: [k.unit === "meal" || k.unit === "order" ? "Sourcing, preparation and quality control" : "Service delivery and quality control", "Customer acquisition and retention", "Cost control against break-even"],
+    key_resources: [inp.launch_model === "online" ? "Kitchen / operations space" : "Outlet location", `${costs.staff} trained staff`, "Supplier relationships"],
+    key_partners: [c.campus ? "Campus administration / student bodies" : "Landlord and local suppliers", inp.launch_model !== "physical" ? "Delivery platforms" : "Payment provider", "Equipment vendors"],
+    unfair_advantage: inp.differentiator ? `Not yet proven. "${inp.differentiator}" is only an advantage if ${comps[0].name} and others can't copy it quickly; look for something harder to copy (location, relationships, data, cost).` : `None yet. ${weakest ? `The weakest-rated competitor (${weakest.name}, ${weakest.rating}/5) shows where service is poor.` : ""}`,
+    key_metrics: [`${k.unit}s sold per month vs break-even ${econ.breakeven_units_per_month}`, "Repeat customers per month", `Contribution per ${k.unit} (${inr(econ.contribution_per_unit)})`]
+  };
+}
+
+/* ===================== STAGE: ASSUMPTION CHECK (plausibility + sensitivity) ===================== */
+function checkAssumptions(r) {
+  const { inp, market, comps, costs, econ, score } = r, k = DATA.categories[inp.category], c = DATA.cities[inp.city];
+  const base = econ.steady_state_monthly_profit;
+  const sens = (label, ov) => { const e = toolUnitEconomics(inp, ov); return { label, profit: e.steady_state_monthly_profit, delta: e.steady_state_monthly_profit - base, payback: e.payback_month }; };
+  const S = [sens("Customers 20% fewer", { customers: inp.customers * 0.8 }), sens("Price 10% lower (same demand)", { price: inp.price * 0.9, fixedDemand: true }), sens("Cost of goods 20% higher", { cogsMult: 1.2 }),
+    sens("Rent 20% higher", { rentMult: 1.2 }), sens("Wages 20% higher", { wageMult: 1.2 }), sens("Purchase frequency 25% lower", { demandMult: 0.75 })];
+  if (inp.launch_model !== "physical") S.push(sens("Platform commission +4 pts (GST)", { commissionAdd: 0.04 }));
+  S.sort((a, b) => a.delta - b.delta);
+  const sev = lbl => (S.find(x => x.label.startsWith(lbl)) || {}).delta;
+  const A = [], add = (assumption, value, source, status, check, lbl) => A.push({ assumption, value, source, status, check, impact: lbl !== undefined ? sev(lbl) : null });
+  const cov = score.coverage;
+  add("Customers you can win each month", `${inp.customers} a month`, "Your input",
+    cov <= 0.8 ? "ok" : cov <= 1.3 ? "stretch" : "unrealistic",
+    `The model estimates one outlet can realistically win about ${score.realisticCustomers} customers a month (${Math.round(market.realistic_capture_rate * 100)}% of ${market.serviceable_customers_one_outlet.toLocaleString("en-IN")} within reach). Your target is ${Math.round(cov * 100)}% of that.`, "Customers");
+  const pos = econ.price_vs_median_pct;
+  add("Your price", `${inr(inp.price)} per ${k.unit}`, "Your input", Math.abs(pos) <= 20 ? "ok" : (pos > 20 && inp.differentiator) || pos < -20 ? "stretch" : "unrealistic",
+    `${Math.abs(pos)}% ${pos >= 0 ? "above" : "below"} the competitor median of ${inr(econ.competitor_median_price)}. ${pos > 20 ? (inp.differentiator ? "A premium needs your differentiator to be visible and valued." : "A premium this large has no stated differentiator to justify it.") : pos < -20 ? "Well below the market: check margins and whether customers read it as low quality." : "Within the normal range for this market."}`, "Price");
+  add("Purchase frequency", `${econ.frequency_per_customer} ${k.unit}s per customer a month`, c.campus ? "Demo assumption (campus: 2.5x city frequency)" : "Demo assumption", "unverified",
+    "Not checked against real behaviour. Ask in interviews how often people buy this today.", "Purchase frequency");
+  add("Cost of goods", `${Math.round(costs.variable.cogs_pct * 100)}% of price`, "Demo assumption", "unverified", "Typical for this category in the demo data. Get two supplier quotes for your actual menu or service.", "Cost of goods");
+  add("Rent", `${inr(costs.rent_per_sqft)} per sq ft a month for ${costs.area_sqft.toLocaleString("en-IN")} sq ft`, "Demo assumption", "unverified",
+    c.campus ? "Campus space is usually allotted by the administration; confirm whether rent, revenue share or a licence fee applies." : "Indicative city average. Rents vary widely by street: get 3 local quotes.", "Rent");
+  const w = costs.wage_per_staff;
+  if (c.minWage) add("Staff wages", `${inr(w)} per person a month`, "Demo assumption", w < c.minWage ? "unrealistic" : "ok",
+    w < c.minWage ? `Below the legal minimum of ${inr(c.minWage)} (${c.minWageSource}). Budget at least the minimum.` : `At or above the legal minimum of ${inr(c.minWage)}.`, "Wages");
+  else add("Staff wages", `${inr(w)} per person a month`, "Demo assumption", "unverified", `Check against the current minimum wage notification for ${c.name}'s state.`, "Wages");
+  if (inp.launch_model !== "physical") add("Delivery-platform commission", `${Math.round(k.commission * 100)}% on platform orders`, "Demo assumption", "stretch",
+    "Public sources put Swiggy/Zomato commission at about 18–25%, plus 18% GST on the commission, so the effective rate is roughly 4 points higher.", "Platform commission");
+  const be = econ.breakeven_capacity_utilisation_pct;
+  add("Break-even volume", `${econ.breakeven_units_per_month ?? "never"} ${k.unit}s a month`, "Calculated", be === null ? "unrealistic" : be <= 50 ? "ok" : be <= 75 ? "stretch" : "unrealistic",
+    be === null ? "Each sale loses money after variable costs." : `That is ${be}% of the outlet's capacity. Below 50% leaves room for a slow start.`);
+  add("Funding", `${lakh(inp.budget)} budget`, "Your input", inp.budget >= econ.capital_needed_incl_buffer ? "ok" : inp.budget >= econ.capital_needed_incl_buffer * 0.75 ? "stretch" : "unrealistic",
+    `The plan needs about ${lakh(econ.capital_needed_incl_buffer)} including a 15% buffer for setup and early losses.`);
+  add("Ramp-up speed", "Full volume by month 6", "Demo assumption", "unverified", "New outlets often take longer. A slower ramp delays payback and raises the cash you need.");
+  if (inp.interviews > 0) {
+    const pct = inp.would_buy_pct || 0;
+    add("Willingness to buy at your price", `${pct}% of ${inp.interviews} people interviewed`, "Your interviews", inp.interviews < 10 ? "stretch" : pct >= 40 ? "ok" : pct >= 20 ? "stretch" : "unrealistic",
+      inp.interviews < 10 ? "Fewer than 10 interviews: encouraging but not yet reliable." : pct >= 40 ? "A strong signal for an early idea." : "Fewer than 4 in 10 would buy: revisit the offer or price.", "Price");
+  } else add("Willingness to buy at your price", "Not yet tested", "No interviews entered", "unverified", "Run 10–20 short interviews (guide below) and enter the results to strengthen this check.", "Price");
+  const counts = { ok: 0, stretch: 0, unrealistic: 0, unverified: 0 }; A.forEach(a => counts[a.status]++);
+  return { list: A, sensitivity: S, counts, base };
+}
+
+/* ===================== STAGE: QUESTIONS REQUIRING VALIDATION ===================== */
+function validationPlan(r) {
+  const { inp, comps, needs, checks, econ } = r, k = DATA.categories[inp.category], c = DATA.cities[inp.city], seg = DATA.segments[inp.segment];
+  const Q = [], add = (question, why, method, signal, priority) => Q.push({ question, why, method, signal, priority });
+  const st = a => (checks.list.find(x => x.assumption === a) || {}).status;
+  const pr = a => ({ unrealistic: "High", stretch: "High", unverified: "Medium", ok: "Low" }[st(a)] || "Medium");
+  add(`Will ${seg.name.toLowerCase()} pay ${inr(inp.price)} per ${k.unit}?`, "Price drives revenue and margin in every scenario.", "Ask 15–20 target customers to choose between your offer and their current option at this price; run a pre-order page.", "At least 40% say they would buy; at least 10 pre-orders or deposits.", pr("Your price"));
+  add(`Can you reach ${inp.customers} customers a month?`, "Volume decides whether you break even.", c.campus ? "Post in 3 hostel and club groups and count sign-ups for a launch-week offer." : "Run a 2-week landing-page or flyer test in your catchment and count sign-ups.", `Sign-ups equal to at least 30% of the monthly target in 2 weeks.`, pr("Customers you can win each month"));
+  add(`Do customers buy about ${econ.frequency_per_customer} times a month?`, "Frequency multiplies every customer's value.", "Ask interviewees how often they bought this in the past 2 weeks (actual behaviour, not intentions).", `Median purchases at least ${Math.max(1, Math.round(econ.frequency_per_customer * 0.8))} a month.`, pr("Purchase frequency"));
+  add(`Is "${needs[0].need.toLowerCase()}" the reason people would switch?`, "Your positioning rests on this gap.", `Ask customers to rank their top 3 frustrations with ${comps.slice(0, 2).map(x => x.name).join(" and ")}.`, "It appears in the top 2 for most interviewees.", "High");
+  add(`What will rent, supplies and staff really cost?`, "Fixed costs set your break-even point.", c.campus ? "Meet the campus estate office about space, fees and rules; get 2 supplier quotes." : "Get 3 rent quotes in your shortlisted area and 2 supplier quotes for your core items.", `Total fixed costs within 10% of ${inr(r.costs.fixed_monthly_total)} a month.`, [st("Rent"), st("Cost of goods"), st("Staff wages")].includes("unrealistic") ? "High" : "Medium");
+  if (inp.launch_model !== "physical") add("What commission will platforms actually charge you?", "Commission plus GST can take a quarter of each platform order.", "Request a commercial term sheet from Swiggy/Zomato or the relevant platform.", `Effective rate (incl. GST) at or below ${Math.round(k.commission * 100) + 4}%.`, "Medium");
+  add("Which competitor would you take customers from, and how will they react?", "Incumbents may cut prices or copy you.", `Mystery-shop ${comps.slice(0, 3).map(x => x.name).join(", ")}: prices, waiting time, quality.`, "A clear, sustainable reason customers would choose you.", "Medium");
+  if (c.campus) add("What permissions does the campus require?", "Operating on campus usually needs administration approval.", "Check the process with the campus administration or student welfare office.", "Written approval path and timeline.", "High");
+  add(`Is ${lakh(inp.budget)} enough to reach break-even?`, "Running out of cash before break-even ends the business.", "Rebuild the budget with real quotes and a slower 9-month ramp.", `Budget covers setup plus losses until break-even with a 15% buffer.`, pr("Funding"));
+  const order = { High: 0, Medium: 1, Low: 2 };
+  const guide = [
+    `When did you last pay for ${({ healthy_meals: "a healthy meal or tiffin", specialty_cafe: "coffee or a café visit", pet_grooming: "pet grooming", fitness_studio: "a fitness class or gym", coworking: "a coworking desk" })[inp.category] || "a " + k.unit + " like this"}? Where, and how much did you pay?`,
+    `How often did you buy it in the past two weeks?`,
+    `What frustrates you most about ${comps[0].name} or your current option?`,
+    `How important is "${needs[0].need.toLowerCase()}" to you, on a scale of 1 to 5?`,
+    `If ${inp.differentiator ? inp.differentiator.toLowerCase() : "a better option"} were available for ${inr(inp.price)}, would you try it? What would make you hesitate?`,
+    `Would you pre-order or pay a small deposit today?`,
+    `Who else should I talk to about this?`];
+  return { questions: Q.sort((a, b) => order[a.priority] - order[b.priority]), guide };
+}
+
+if (typeof module !== "undefined") module.exports = { DATA, analyse, checkAssumptions, buildBusinessModel, validationPlan, toolMarketProfile, toolCompetitors, toolCustomerNeeds, toolCostAssumptions, toolUnitEconomics };
+
+</script>
+<script>
+// expand ${icon} placeholders in static markup
+document.querySelectorAll(".seg label,.get .gi,#notice,.disclaimer,#toast,#pdfBtn,.hero .meta,.ft .fi,.hl,.customwrap .tip").forEach(el => el.innerHTML = el.innerHTML.replace(/\$\{(\w+)\}/g, (_, n) => ic(n)));
+const $ = id => document.getElementById(id);
+const CAT_ICON = { healthy_meals: "bowl", specialty_cafe: "cup", pet_grooming: "paw", fitness_studio: "dumbbell", coworking: "desk" };
+const PRESETS = [
+  { label: "Healthy meals", where: "Bengaluru", idea: "High-protein, regional-flavour meal subscription for office-goers", category: "healthy_meals", city: "bengaluru", segment: "young_professionals", launch_model: "hybrid", price: 299, customers: 320, budget: 25, differentiator: "Macro-labelled South Indian meals, pause-anytime plans" },
+  { label: "Late-night study café", where: "BITS Pilani campus", idea: "Late-night study café near the hostels with quiet seating, good coffee and snacks", category: "specialty_cafe", city: "pilani_campus", segment: "students", launch_model: "physical", price: 120, customers: 300, budget: 17, differentiator: "Open till 2 am, bookable quiet tables, student pricing", interviews: 14, would_buy_pct: 50 },
+  { label: "Pet grooming", where: "Hyderabad", idea: "Fear-free pet grooming studio with pick-up and live photo updates", category: "pet_grooming", city: "hyderabad", segment: "young_professionals", launch_model: "physical", price: 1500, customers: 220, budget: 18, differentiator: "Certified fear-free groomers, pick-up & drop" },
+  { label: "Family fitness", where: "Jaipur", idea: "Beginner-friendly family fitness studio with progress tracking", category: "fitness_studio", city: "jaipur", segment: "families", launch_model: "physical", price: 2400, customers: 220, budget: 40, differentiator: "Family plans, coached small batches, app-based progress" },
+  { label: "Neighbourhood coworking", where: "Bengaluru", idea: "Neighbourhood coworking with call booths near residential areas", category: "coworking", city: "bengaluru", segment: "young_professionals", launch_model: "physical", price: 7000, customers: 90, budget: 60, differentiator: "10-minute-from-home locations, day passes" }
+];
+const fill = (id, obj) => { $(id).innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join(""); };
+fill("category", DATA.categories); fill("city", DATA.cities); fill("segment", DATA.segments);
+$("category").insertAdjacentHTML("beforeend", `<option value="custom">Something else (my own idea)</option>`);
+$("city").insertAdjacentHTML("beforeend", `<option value="custom_city">Other city, town or campus</option>`);
+const isCustom = () => $("category").value === "custom" || $("city").value === "custom_city";
+function toggleCustom() {
+  $("customCatWrap").hidden = $("category").value !== "custom";
+  $("customCityWrap").hidden = $("city").value !== "custom_city";
+  $("modeNote").textContent = isCustom() ? "Needed for your own idea: Claude researches the market first" : ($("aiToggle").checked ? "Claude researches with tools and writes the strategy" : "Built-in rules write the strategy. Numbers are identical.");
+}
+function startCustom() {
+  $("category").value = "custom"; for (const k of ["idea", "differentiator", "customCategory", "customUnit"]) $(k).value = "";
+  if (sample) $("aiToggle").checked = true;
+  document.querySelectorAll(".ex").forEach(b => b.setAttribute("aria-pressed", b.classList.contains("own")));
+  toggleCustom(); updatePrice(); setTimeout(() => $("idea").focus(), 50);
+}
+$("presets").innerHTML = PRESETS.map((p, i) => `<button type="button" class="ex" data-i="${i}" aria-pressed="false"><span class="ei">${ic(CAT_ICON[p.category])}</span><span><b>${p.label}</b><span>${p.where}</span></span></button>`).join("") +
+  `<button type="button" class="ex own" data-own="1" aria-pressed="false"><span class="ei">${ic("spark")}</span><span><b>Your own idea</b><span>Any business, any city</span></span></button>`;
+const lm = () => document.querySelector('input[name="lm"]:checked').value;
+function loadPreset(i) {
+  const p = PRESETS[i];
+  for (const k of ["idea", "category", "city", "segment", "price", "customers", "budget", "differentiator", "interviews", "would_buy_pct"]) $(k).value = p[k] ?? "";
+  document.querySelector(`input[name="lm"][value="${p.launch_model}"]`).checked = true;
+  document.querySelectorAll(".ex").forEach(b => b.setAttribute("aria-pressed", b.dataset.i == i));
+  toggleCustom(); updatePrice();
+}
+$("presets").onclick = e => { const b = e.target.closest(".ex"); if (!b) return; if (b.dataset.own) startCustom(); else loadPreset(+b.dataset.i); };
+["category", "city"].forEach(id => $(id).addEventListener("change", toggleCustom));
+$("customUnit").addEventListener("input", () => updatePrice());
+["idea", "category", "city", "segment", "price", "customers", "budget", "differentiator"].forEach(id => $(id).addEventListener("input", () => document.querySelectorAll(".ex").forEach(b => b.setAttribute("aria-pressed", "false"))));
+
+const fmtL = n => "₹" + (n / 1e5).toFixed(1) + " L";
+const fmtI = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const fmtN = n => Math.round(n).toLocaleString("en-IN");
+
+/* live price position against competitors */
+function updatePrice() {
+  const cat = $("category").value;
+  const pbar = document.querySelector(".pricebar");
+  if (isCustom()) {
+    const unit = cat === "custom" ? ($("customUnit").value.trim() || "sale") : DATA.categories[cat].unit;
+    $("unitHint").textContent = "per " + unit.replace("membership-month", "month").replace("seat-month", "seat/month");
+    pbar.style.display = "none";
+    $("priceNote").style.marginTop = "6px";
+    $("priceNote").textContent = "Your best guess is fine. Claude researches local competitor prices when you run the analysis, and the report shows where yours sits.";
+    return;
+  }
+  pbar.style.display = ""; $("priceNote").style.marginTop = "";
+  const k = DATA.categories[cat];
+  $("unitHint").textContent = "per " + k.unit.replace("membership-month", "month").replace("seat-month", "seat/month");
+  const ps = toolCompetitors({ city: $("city").value, category: cat }).map(c => c.price);
+  const lo = Math.min(...ps) * 0.8, hi = Math.max(...ps) * 1.15, med = median(ps);
+  const pos = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
+  $("ticks").innerHTML = ps.map(p => `<span class="tick" style="left:${pos(p)}%"></span>`).join("");
+  $("pmin").textContent = fmtI(lo); $("pmax").textContent = fmtI(hi);
+  const v = +$("price").value;
+  $("me").style.display = v ? "block" : "none"; $("me").style.left = pos(v) + "%";
+  if (!v) { $("priceNote").textContent = `Competitors in ${DATA.cities[$("city").value].name} charge around ${fmtI(med)}.`; return; }
+  const d = Math.round((v / med - 1) * 100), cheaper = ps.filter(p => p < v).length;
+  $("priceNote").innerHTML = `<b>${Math.abs(d)}% ${d >= 0 ? "above" : "below"}</b> the local median of ${fmtI(med)}. ${cheaper} of ${ps.length} competitors are cheaper.`;
+}
+["category", "city", "price"].forEach(id => $(id).addEventListener("input", updatePrice));
+loadPreset(0);
+
+/* ---------- AI availability ---------- */
+let sample = null;
+function setNoAI(msg) {
+  sample = null; $("aiToggle").checked = false; $("aiToggle").disabled = true;
+  $("modeBadge").textContent = "Rules engine"; $("aiDot").classList.remove("on"); $("modeNote").textContent = msg;
+}
+$("aiToggle").onchange = () => $("modeNote").textContent = $("aiToggle").checked ? "Claude researches with tools and writes the strategy" : "Built-in rules write the strategy. Numbers are identical.";
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) throw 0;
+    const s = await window.claude.use("sample"); if (!s) throw 0;
+    sample = s; $("modeBadge").textContent = "AI agent ready"; $("aiDot").classList.add("on");
+  } catch { setNoAI("AI isn't available here, so built-in rules write the strategy"); }
+})();
+
+/* ---------- launch sequence rail ---------- */
+const STAGES = [["Brief", "doc"], ["Market", "map"], ["Competitors", "store"], ["Customers", "heart"], ["Business model", "desk"], ["Costs", "coins"], ["Economics", "chart"], ["Assumptions", "shield"], ["Verdict", "flag"]];
+function railReset() {
+  $("rail").innerHTML = `<div class="fillbar" id="fillbar"></div>` + STAGES.map(([l, i], n) => `<div class="st" id="st${n}"><div class="b">${ic(i)}</div><div><div class="l">${l}</div><div class="d"></div></div></div>`).join("");
+  $("callList").innerHTML = ""; $("calls").style.display = "none";
+}
+function railSet(n, state, d) {
+  const el = $("st" + n); el.className = "st " + state;
+  if (state === "done") el.querySelector(".b").innerHTML = ic("check");
+  if (d !== undefined) el.querySelector(".d").textContent = d;
+  const done = document.querySelectorAll(".st.done").length;
+  $("fillbar").style.width = (Math.max(0, done - 1) / (STAGES.length - 1) * 86) + "%";
+}
+function logCall(name, detail) {
+  $("calls").style.display = "block";
+  const el = document.createElement("div"); el.className = "call";
+  el.innerHTML = `<span class="ci">${ic("tool")}</span><div><code>${name}</code> <span class="cd">${detail}</span></div>`;
+  $("callList").appendChild(el);
+  return { done(d) { el.querySelector(".cd").textContent = d; el.querySelector(".ci").innerHTML = ic("check"); }, fail(d) { el.className = "call fail"; el.querySelector(".cd").textContent = d; el.querySelector(".ci").innerHTML = ic("x"); }, detail(d) { el.querySelector(".cd").textContent = d; } };
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+function readInputs() {
+  return { idea: $("idea").value.trim(), category: $("category").value, city: $("city").value, segment: $("segment").value,
+    launch_model: lm(), price: +$("price").value, customers: +$("customers").value, budget: Math.round(+$("budget").value * 1e5), differentiator: $("differentiator").value.trim(),
+    interviews: Math.max(0, +$("interviews").value || 0), would_buy_pct: Math.min(100, Math.max(0, +$("would_buy_pct").value || 0)),
+    customCategory: $("customCategory").value.trim(), customUnit: $("customUnit").value.trim(), customCity: $("customCity").value.trim() };
+}
+function validate(inp) {
+  let ok = true;
+  const flag = (cond, ids, err) => { ids.forEach(id => ($(id).closest(".affix") || $(id)).classList.toggle("invalid", cond)); $(err).style.display = cond ? "block" : "none"; if (cond) ok = false; };
+  flag(!inp.idea, ["idea"], "ideaErr");
+  const custom = inp.category === "custom" || inp.city === "custom_city";
+  let cmsg = "";
+  if (custom && !sample) cmsg = "Your own idea needs the AI agent, which isn't available in this view. Pick the closest listed type and city instead.";
+  else if (custom && !$("aiToggle").checked) cmsg = "Your own idea needs the AI agent so Claude can research the market. Switch on AI agent below.";
+  else if (inp.category === "custom" && !inp.customCategory) cmsg = "Describe the type of business so Claude knows which market to research.";
+  $("customErr").textContent = cmsg;
+  flag(!!cmsg, inp.category === "custom" && !inp.customCategory && sample ? ["customCategory"] : [], "customErr");
+  flag(inp.city === "custom_city" && !inp.customCity, ["customCity"], "cityErr");
+  flag(!(inp.price > 0), ["price"], "priceErr");
+  flag(!(inp.customers > 0 && inp.budget > 0), ["customers", "budget"], "numErr");
+  if (!ok) document.querySelector(".invalid")?.scrollIntoView({ block: "center" });
+  return ok;
+}
+
+/* ---------- agent tools ---------- */
+function makeTools(inp) {
+  const wrap = (name, desc, schema, fn, summarise) => ({
+    name, description: desc, inputSchema: schema,
+    execute: async (args) => {
+      const t = logCall(name, args && Object.keys(args).length ? JSON.stringify(args) : "");
+      try { const out = fn(args || {}); t.done(summarise(out)); return out; } catch (e) { t.fail(String(e.message || e)); throw e; }
+    }
+  });
+  const obj = { type: "object", properties: {}, additionalProperties: false };
+  const lean = e => { const { cumulative_cash, monthly, ...rest } = e; return rest; };
+  return [
+    wrap("get_market_profile", "Local market size and demand drivers for the founder's city, category and segment.", obj, () => toolMarketProfile(inp), o => `${fmtN(o.addressable_customers)} addressable customers, growing ${Math.round(o.category_growth_yoy * 100)}% a year`),
+    wrap("get_competitors", "Local competitors with visible prices, ratings, strengths and gaps.", obj, () => toolCompetitors(inp), o => `${o.length} competitors priced ${fmtI(Math.min(...o.map(c => c.price)))} to ${fmtI(Math.max(...o.map(c => c.price)))}`),
+    wrap("get_customer_needs", "Ranked customer needs for the target segment with importance, satisfaction and opportunity score.", obj, () => toolCustomerNeeds(inp), o => `biggest gap: ${o[0].need.toLowerCase()}`),
+    wrap("get_cost_assumptions", "Capex, monthly fixed costs and variable cost percentages for the chosen city and launch model.", obj, () => toolCostAssumptions(inp), o => `setup ${fmtL(o.capex_total)}, ${fmtI(o.fixed_monthly_total)} a month`),
+    wrap("get_assumption_check", "Plausibility check of every key assumption (ok, stretch, unrealistic or unverified) and the profit impact if each one is 20% worse.", obj,
+      () => { const r = analyse(inp); return { assumptions: r.checks.list.map(a => ({ assumption: a.assumption, value: a.value, source: a.source, status: a.status, check: a.check })), sensitivity: r.checks.sensitivity.map(x => ({ scenario: x.label, monthly_profit_change: x.delta })), base_monthly_profit: r.checks.base }; },
+      o => `${o.assumptions.filter(a => a.status === "unrealistic").length} unrealistic, ${o.assumptions.filter(a => a.status === "stretch").length} stretch`),
+    wrap("get_business_model_draft", "A first-draft business model canvas built from the market, competitor, needs and cost data. Improve it.", obj,
+      () => { const { source, ...bm } = analyse(inp).bm; return bm; }, () => "canvas draft"),
+    wrap("run_unit_economics", "Unit economics, break-even and capital need at a given price (and optional customer target). Use to test pricing scenarios.",
+      { type: "object", properties: { price: { type: "number" }, customers: { type: "number" } }, required: ["price"] },
+      a => lean(toolUnitEconomics(inp, { price: a.price, customers: a.customers })),
+      o => `at ${fmtI(o.price)}: ${o.contribution_margin_pct}% margin, ${fmtI(o.steady_state_monthly_profit)} profit a month, payback ${o.payback_month ? "month " + o.payback_month : "after 36 months"}`)
+  ];
+}
+async function aiNarrative(inp, r) {
+  const k = DATA.categories[inp.category];
+  const prompt = `You are a startup launch-planning analyst for Indian local markets. Evaluate this business idea using ONLY the tools provided (they return a demo dataset).
+
+FOUNDER INPUT
+- Idea: ${inp.idea}
+- Category: ${k.name} (unit: ${k.unit})
+- City: ${DATA.cities[inp.city].name} | Segment: ${DATA.segments[inp.segment].name} | Launch model: ${inp.launch_model}
+- Planned price: ₹${inp.price} per ${k.unit} | Target customers/month: ${inp.customers} | Budget: ₹${inp.budget.toLocaleString("en-IN")}
+- Differentiator: ${inp.differentiator || "not specified"}${r.dataSource === "ai" ? `
+- Data note: the market data behind these tools was estimated by you in an earlier research step (${r.research.confidence} confidence), not looked up live. Make the validation questions target the shakiest estimates.` : ""}
+- Rule-based score already computed: ${r.score.total}/100 (${r.score.verdict}); sub-scores ${r.score.parts.map(p => p.key + " " + p.score).join(", ")}
+
+STEPS
+1. Call get_market_profile, get_competitors, get_customer_needs and get_cost_assumptions.
+2. Call get_business_model_draft and improve it into a specific business model for this idea.
+3. Call run_unit_economics at the planned price and at least two alternative prices to find a better price point.
+4. Call get_assumption_check, and focus the validation questions on the assumptions that are unrealistic, a stretch or unverified, and on the biggest profit risks.
+5. Write from the entrepreneur's point of view: help them decide whether and how to launch.
+6. Then reply with ONLY a JSON object (no markdown fences) in this exact shape:
+{"headline": "one sentence verdict, specific to this idea",
+ "positioning": "2-3 sentences: where this idea should position against named competitors and why",
+ "pricing": "1-2 sentences: recommended price with the numbers you tested",
+ "opportunities": ["3-4 specific opportunities tied to customer-need gaps and competitor gaps, naming competitors"],
+ "risks": [{"risk": "...", "mitigation": "..."}],
+ "plan": [{"phase": "Days 1–30 · Validate", "actions": ["...","...","..."]}, {"phase": "Days 31–60 · Build", "actions": [...]}, {"phase": "Days 61–90 · Launch", "actions": [...]}],
+ "business_model": {"customer_segments": [..], "problems": [..], "value_proposition": "one sentence", "channels": [..], "revenue_streams": [..], "cost_structure": [..], "key_activities": [..], "key_resources": [..], "key_partners": [..], "unfair_advantage": "...", "key_metrics": [..]},
+ "validation_questions": [5-8 items: {"question", "why": "which assumption it tests", "method": "a cheap experiment or interview", "signal": "measurable success signal", "priority": "High|Medium|Low"}],
+ "interview_guide": [5-7 open questions to ask potential customers, about past behaviour not opinions]}
+Give 3-5 risks. Use ₹ and Indian number formatting. Be concrete and quantitative. Do not invent data beyond the tools.`;
+  const think = logCall("Claude", "planning which tools to use");
+  const res = await sample(prompt, { tools: makeTools(inp), modelTier: "default", cache: false, onText: ({ text }) => think.detail(text.slice(-120).replace(/\s+/g, " ")) });
+  const txt = res.text || "";
+  const j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+  if (!j.headline || !Array.isArray(j.risks) || !Array.isArray(j.plan)) throw new Error("the response was incomplete");
+  const S = (v, m = 300) => typeof v === "string" && v.trim() ? v.trim().slice(0, m) : "", A = (v, n = 6) => Array.isArray(v) ? v.map(x => S(x)).filter(Boolean).slice(0, n) : [];
+  const b = j.business_model || {};
+  j.business_model = ["customer_segments", "problems", "channels", "revenue_streams", "cost_structure", "key_activities", "key_resources", "key_partners", "key_metrics"].reduce((o, key) => { const v = A(b[key]); if (v.length) o[key] = v; return o; }, {});
+  if (S(b.value_proposition)) j.business_model.value_proposition = S(b.value_proposition, 400);
+  if (S(b.unfair_advantage)) j.business_model.unfair_advantage = S(b.unfair_advantage, 300);
+  j.validation_questions = (Array.isArray(j.validation_questions) ? j.validation_questions : []).filter(q => q && S(q.question)).slice(0, 10)
+    .map(q => ({ question: S(q.question), why: S(q.why), method: S(q.method), signal: S(q.signal), priority: ["High", "Medium", "Low"].includes(q.priority) ? q.priority : "Medium" }));
+  j.interview_guide = A(j.interview_guide, 8);
+  think.done("wrote the strategy");
+  return { source: "ai", ...j };
+}
+
+
+/* ---------- market research for custom ideas (Claude) ---------- */
+const researchCache = {};
+const num = (v, d, lo, hi) => { const x = Number(v); return Number.isFinite(x) ? Math.min(hi, Math.max(lo, x)) : d; };
+const str = (v, d = "") => (typeof v === "string" && v.trim()) ? v.trim().slice(0, 160) : d;
+async function researchMarket(inp, log) {
+  const needCat = inp.category === "custom", needCity = inp.city === "custom_city";
+  const key = JSON.stringify([inp.idea, inp.customCategory, inp.customUnit, inp.city, inp.customCity, inp.segment, needCat ? inp.category : ""]);
+  if (researchCache[key]) { Object.assign(DATA.cities, researchCache[key].cities); Object.assign(DATA.categories, researchCache[key].categories); log("research_market", "").done("reused research from your last run of this idea"); return researchCache[key].meta; }
+  const cityName = needCity ? inp.customCity : DATA.cities[inp.city].name;
+  const catName = needCat ? inp.customCategory : DATA.categories[inp.category].name;
+  const seg = DATA.segments[inp.segment].name;
+  const prompt = `You are a market researcher for small-business launches in India. Build a first-pass dataset for a local-market feasibility model, using your general knowledge of Indian markets. Be realistic and slightly conservative; when unsure, give your best estimate and lower the confidence.
+
+FOUNDER BRIEF
+- Idea: ${inp.idea}
+- Business type: ${catName}
+- One sale: ${needCat ? (inp.customUnit || "choose the natural unit for this business") : DATA.categories[inp.category].unit}
+- City: ${cityName}
+- Target customers: ${seg}
+- Launch model: ${inp.launch_model}
+- Founder's planned price: ₹${inp.price} (their guess: do not anchor competitor prices on it)
+${inp.differentiator ? "- Differentiator: " + inp.differentiator : ""}
+
+Return ONLY a JSON object (no markdown fences) with ${needCat && needCity ? 'both "category" and "city"' : needCat ? '"category" (no "city")' : '"city" (no "category")'} plus "meta":
+${needCat ? `"category": {
+  "unit": "singular noun for one sale",
+  "freq": purchases per active customer per month,
+  "adoption": share (0-1) of the target segment in this city who buy this kind of product/service at all,
+  "growth": expected annual category growth (0-1),
+  "capacity": max units one outlet or operation can sell per month,
+  "area": square feet for one physical outlet,
+  "staff": headcount, "wage": average monthly wage per staff member in this city in ₹,
+  "utilities": monthly utilities in ₹,
+  "cogs": variable cost of goods/consumables as a fraction of price,
+  "commission": commission fraction charged by platforms/aggregators on orders through them (0 if none),
+  "capex": {"item name": ₹ amount, ...} 3-6 one-time setup items (exclude rent deposit),
+  "competitors": exactly 6 objects {"name","type","price" (₹ per unit in this city),"rating" (1-5),"reviews" (rough round number),"channel","strengths","gaps"}. Name real brands or chains only when you are confident they operate in this city; otherwise use descriptive archetypes such as "Local independent kiosk near colleges",
+  "needs": exactly 6 objects {"need","importance" (1-5 for this segment),"satisfaction" (1-5, how well current players meet it)}
+},` : ""}
+${needCity ? `"city": {"pop_m": urban population in millions, "priceIdx": consumer price level vs Pune = 1.0, "rent": high-street retail rent in ₹ per sq ft per month, "wageIdx": wage level vs Pune = 1.0, "digital": 0-1 adoption of online ordering and UPI, "localities": 6 commercial areas},` : ""}
+"meta": {"confidence": "low" | "medium" | "high", "notes": "one sentence on the main data limitations", "verify": ["3 assumptions the founder should check first"]}`;
+  const t = log("research_market", `researching ${catName} in ${cityName}`);
+  const res = await sample(prompt, { modelTier: "complex", cache: false, onText: ({ text }) => t.detail(text.length > 30 ? `drafting market data (${Math.round(text.length / 100) / 10}k characters)` : "thinking") });
+  const txt = res.text || "";
+  let j; try { j = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch { t.fail("the research came back in an unreadable format"); throw new Error("the market research couldn't be read"); }
+  const out = { cities: {}, categories: {} };
+  if (needCity) {
+    const c = j.city || {};
+    const locs = (Array.isArray(c.localities) ? c.localities : []).map(x => str(x)).filter(Boolean);
+    out.cities.custom_city = { name: inp.customCity, pop_m: num(c.pop_m, 1.5, 0.02, 35), priceIdx: num(c.priceIdx, 0.9, 0.5, 1.6), rent: num(c.rent, 70, 10, 400), wageIdx: num(c.wageIdx, 0.9, 0.5, 1.6), digital: num(c.digital, 0.65, 0.2, 0.98), localities: locs.length ? locs : ["Main market", "Station road", "College area", "New town", "Old city", "Highway belt"] };
+    Object.assign(DATA.cities, out.cities);
+  }
+  const cityObj = DATA.cities[inp.city];
+  if (needCat) {
+    const k = j.category || {};
+    const comps = (Array.isArray(k.competitors) ? k.competitors : []).filter(x => x && str(x.name) && Number(x.price) > 0).slice(0, 8).map(x => ({
+      name: str(x.name), type: str(x.type, "Competitor"), price: Number(x.price) / cityObj.priceIdx, rating: num(x.rating, 4, 1, 5), reviews: Math.round(num(x.reviews, 200, 0, 1e6)),
+      channel: str(x.channel, "Walk-in"), strengths: str(x.strengths, "-"), gaps: str(x.gaps, "-") }));
+    const needs = (Array.isArray(k.needs) ? k.needs : []).filter(x => x && str(x.need)).slice(0, 8).map(x => ({ need: str(x.need), importance: num(x.importance, 4, 1, 5), satisfaction: num(x.satisfaction, 3, 1, 5), seg: {} }));
+    if (comps.length < 2 || needs.length < 2) { t.fail("not enough competitor or customer data came back"); throw new Error("the market research was incomplete"); }
+    const capex = {}; for (const [a, b] of Object.entries(k.capex || {})) if (Number(b) > 0) capex[str(a)] = Number(b) / (0.9 + 0.1 * cityObj.priceIdx);
+    if (!Object.keys(capex).length) capex["Equipment & fit-out"] = 800000;
+    out.categories.custom = {
+      name: inp.customCategory, unit: str(k.unit, inp.customUnit || "sale").toLowerCase(), freq: num(k.freq, 2, 0.05, 60), cogs: num(k.cogs, 0.35, 0, 0.9), commission: num(k.commission, 0.15, 0, 0.4),
+      adoption: num(k.adoption, 0.05, 0.001, 0.9), growth: num(k.growth, 0.12, -0.2, 0.8), capacity: Math.round(num(k.capacity, 1000, 5, 1e6)), area: Math.round(num(k.area, 600, 50, 50000)),
+      staff: Math.round(num(k.staff, 4, 1, 300)), wage: num(k.wage, 18000, 5000, 200000) / cityObj.wageIdx, utilities: num(k.utilities, 20000, 1000, 2e6) / cityObj.wageIdx,
+      capex, competitors: comps, needs };
+    Object.assign(DATA.categories, out.categories);
+  }
+  const m = j.meta || {};
+  const meta = { confidence: ["low", "medium", "high"].includes(m.confidence) ? m.confidence : "medium", notes: str(m.notes, ""), verify: (Array.isArray(m.verify) ? m.verify : []).map(x => str(x)).filter(Boolean).slice(0, 4) };
+  researchCache[key] = { ...out, meta };
+  const kk = DATA.categories[inp.category];
+  t.done(needCat ? `${kk.competitors.length} competitors, ${kk.needs.length} customer needs and a cost model for ${cityName} (${meta.confidence} confidence)` : `profile of ${cityName} (${meta.confidence} confidence)`);
+  return meta;
+}
+
+/* ---------- run ---------- */
+$("f").onsubmit = async e => {
+  e.preventDefault();
+  const inp = readInputs(); if (!validate(inp)) return;
+  const useAI = $("aiToggle").checked && sample;
+  $("runBtn").disabled = true; $("runTxt").textContent = "Analysing…";
+  $("notice").style.display = "none"; $("notice").classList.remove("info"); $("report").style.display = "none"; $("empty").style.display = "none";
+  $("traceCard").style.display = "block"; $("traceTitle").textContent = "Running the analysis";
+  const custom = inp.category === "custom" || inp.city === "custom_city";
+  const catLabel = inp.category === "custom" ? inp.customCategory : DATA.categories[inp.category].name, cityLabel = inp.city === "custom_city" ? inp.customCity : DATA.cities[inp.city].name;
+  $("traceSub").textContent = `${catLabel} in ${cityLabel}, for ${DATA.segments[inp.segment].name.toLowerCase()}`;
+  railReset(); $("traceCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  try {
+    let research = null;
+    if (custom) {
+      railSet(0, "done", "your own idea"); railSet(1, "active", "Claude is researching this market");
+      $("traceTitle").textContent = "Claude is researching your market";
+      try { research = await researchMarket(inp, logCall); }
+      catch (err) {
+        if (err && err.code === "not_granted") setNoAI("AI access was declined, so only the listed ideas can be analysed");
+        throw new Error(`Claude couldn't finish researching this market (${(err && (err.message || err.code)) || "unknown error"}). Try again, or describe the business type more specifically`);
+      }
+      $("traceTitle").textContent = "Running the analysis";
+    }
+    const r = analyse(inp), k = DATA.categories[inp.category];
+    r.dataSource = custom ? "ai" : "demo"; r.research = research;
+    const det = [`${k.unit}s at ${fmtI(inp.price)}`, `${fmtN(r.market.addressable_customers)} reachable buyers`, `${r.comps.length} found, median ${fmtI(r.econ.competitor_median_price)}`,
+      `top gap: ${r.needs[0].need.toLowerCase()}`, "canvas drafted", `${fmtL(r.costs.capex_total)} setup`, `break-even ${fmtN(r.econ.breakeven_units_per_month || 0)} ${k.unit}s/mo`,
+      `${r.checks.counts.unrealistic} unrealistic, ${r.checks.counts.stretch} stretch`];
+    for (let i = 0; i < 8; i++) { railSet(i, "active"); await wait(useAI ? 140 : 260); railSet(i, "done", det[i]); }
+    railSet(8, "active", useAI ? "Claude is reasoning" : "");
+    if (useAI) {
+      try { r.narrative = await aiNarrative(inp, r); }
+      catch (err) {
+        if (err && err.code === "not_granted") setNoAI("AI access was declined, so built-in rules write the strategy");
+        logCall("Claude", "").fail(`stopped: ${(err && (err.message || err.code)) || "unknown error"}`);
+        $("noticeTxt").textContent = `The AI step didn't finish (${(err && (err.code || err.message)) || "unknown error"}), so the strategy below comes from the built-in rules. Every number is unaffected. Run the analysis again to retry.`;
+        $("notice").style.display = "flex";
+      }
+    }
+    railSet(8, "done", `${r.score.total}/100, ${r.score.verdict}`);
+    $("traceTitle").textContent = "Analysis complete";
+    render(r);
+    if (custom && $("notice").style.display !== "flex") {
+      $("notice").classList.add("info");
+      $("noticeTxt").textContent = `Market data for this idea was researched by Claude from general knowledge (${research.confidence} confidence), not looked up live. ${research.notes} Check competitor prices and costs locally before deciding.`;
+      $("notice").style.display = "flex";
+    }
+  } catch (err) {
+    $("traceTitle").textContent = "The analysis stopped";
+    $("noticeTxt").textContent = (err.message || String(err)) + ".";
+    $("notice").style.display = "flex";
+  } finally { $("runBtn").disabled = false; $("runTxt").textContent = "Run again with these inputs"; }
+};
+
+/* ---------- render ---------- */
+const charts = {};
+function chart(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
+Chart.defaults.font.family = "Figtree"; Chart.defaults.color = "#7C83A3"; Chart.defaults.borderColor = "#EDF0F6";
+Chart.defaults.plugins.tooltip.backgroundColor = "#1B2140"; Chart.defaults.plugins.tooltip.padding = 10; Chart.defaults.plugins.tooltip.cornerRadius = 8;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const tone = s => s >= 70 ? "var(--go)" : s >= 50 ? "var(--refine)" : "var(--rethink)";
+let lastSummary = "", lastR = null;
+
+function render(r) {
+  lastR = r;
+  const { inp, market, comps, needs, costs, econ, score, narrative: n, sweep } = r;
+  const k = DATA.categories[inp.category], city = DATA.cities[inp.city].name, seg = DATA.segments[inp.segment].name;
+  $("report").style.display = "flex";
+
+  // verdict gauge
+  const L = Math.PI * 110;
+  $("garc").setAttribute("stroke", { GO: "#14895B", REFINE: "#C77A12", RETHINK: "#C23B31" }[score.verdict]);
+  $("garc").setAttribute("stroke-dasharray", "0 400"); $("needle").style.transform = "rotate(-90deg)";
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("garc").setAttribute("stroke-dasharray", `${L * score.total / 100} 400`);
+    $("needle").style.transform = `rotate(${-90 + 180 * score.total / 100}deg)`;
+  }));
+  let t0 = null; const step = ts => { t0 ??= ts; const p = Math.min(1, (ts - t0) / 900); $("scoreN").textContent = Math.round(score.total * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step);
+  $("pill").className = "chip " + score.verdict;
+  $("pill").innerHTML = ic({ GO: "check", REFINE: "tool", RETHINK: "x" }[score.verdict]) + { GO: "GO", REFINE: "REFINE", RETHINK: "RETHINK" }[score.verdict];
+  $("ideaLine").textContent = inp.idea;
+  $("headline").textContent = n.headline;
+  $("bars").innerHTML = score.parts.map(p => `<div class="sub"><span>${p.key} <span class="w">${Math.round(p.weight * 100)}%</span></span><div class="tr"><div class="fl" data-w="${p.score}" style="background:${tone(p.score)}"></div></div><b>${p.score}</b></div>`).join("");
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll(".sub .fl").forEach(el => el.style.width = el.dataset.w + "%")));
+  if (score.capReason) $("bars").insertAdjacentHTML("beforeend", `<p class="capnote">${esc(score.capReason)}</p>`);
+  $("srcTag").innerHTML = ic(n.source === "ai" ? "spark" : "shield") + (r.dataSource === "ai" ? "Market researched and strategy written by Claude. Numbers come from the planning model." : n.source === "ai" ? "Strategy written by Claude after calling the research tools. Numbers come from the planning model." : "Strategy written by the built-in rules. Numbers come from the planning model.");
+
+  // KPIs
+  const be = econ.breakeven_capacity_utilisation_pct ?? 999;
+  const kp = [
+    ["users", "Reachable buyers", fmtN(market.addressable_customers), `${seg.toLowerCase()} in ${city}`, market.addressable_customers > 50000 ? "good" : "warn"],
+    ["tag", "Your price vs market", (econ.price_vs_median_pct > 0 ? "+" : "") + econ.price_vs_median_pct + "%", `median ${fmtI(econ.competitor_median_price)}`, Math.abs(econ.price_vs_median_pct) <= 25 ? "good" : "warn"],
+    ["coins", "Margin per sale", econ.contribution_margin_pct + "%", `${fmtI(econ.contribution_per_unit)} per ${k.unit}`, econ.contribution_margin_pct >= 50 ? "good" : econ.contribution_margin_pct >= 35 ? "warn" : "bad"],
+    ["gauge", "Break-even", econ.breakeven_units_per_month ? fmtN(econ.breakeven_units_per_month) : "Never", `${k.unit}s a month, ${be}% of capacity`, be <= 50 ? "good" : be <= 75 ? "warn" : "bad"],
+    ["wallet", "Money needed", fmtL(econ.capital_needed_incl_buffer), `you have ${fmtL(inp.budget)}`, inp.budget >= econ.capital_needed_incl_buffer ? "good" : inp.budget >= econ.capital_needed_incl_buffer * 0.7 ? "warn" : "bad"],
+    ["calendar", "Payback", econ.payback_month ? "Month " + econ.payback_month : "36+ months", `${fmtI(econ.steady_state_monthly_profit)} profit a month`, econ.payback_month && econ.payback_month <= 24 ? "good" : econ.payback_month ? "warn" : "bad"]
+  ];
+  $("kpis").innerHTML = kp.map(([i, a, b, c, t]) => `<div class="kpi ${t}"><div class="kl">${ic(i)}${a}</div><div class="kv">${b}</div><div class="ks">${c}</div></div>`).join("");
+
+  // funnel
+  $("funnelFoot").textContent = `Population × segment share × category adoption × digital reach, then one outlet's catchment (${Math.round(market.catchment_share * 100)}%) and a realistic capture rate (${Math.round(market.realistic_capture_rate * 100)}%).${DATA.cities[inp.city].campus ? " A campus is a dense, captive market, so reach and capture are higher than in a city." : ""}`;
+  $("mktSub").textContent = `${k.name} in ${city} is growing about ${Math.round(market.category_growth_yoy * 100)}% a year`;
+  const rows = [["Everyone in " + city, market.city_population], [seg, market.segment_population], ["Already buy this category", market.addressable_customers], ["Within reach of one outlet", market.serviceable_customers_one_outlet], [`Realistically yours (${Math.round(market.realistic_capture_rate * 100)}%)`, score.realisticCustomers]];
+  const mx = Math.log10(rows[0][1]), mn = Math.log10(Math.max(1, Math.min(score.realisticCustomers, inp.customers)));
+  const wpct = v => 30 + 70 * (Math.log10(Math.max(1, v)) - mn) / (mx - mn || 1);
+  $("funnel").innerHTML = rows.map(([a, b]) => `<div class="fn"><div class="fb" style="width:${wpct(b)}%">${esc(a)}</div><b>${fmtN(b)}</b></div>`).join("") +
+    `<div class="fn you"><div class="fb" style="width:${wpct(inp.customers)}%">${ic(score.coverage > 1 ? "x" : "check")}&nbsp;Your monthly target</div><b>${fmtN(inp.customers)}</b></div>` +
+    (score.coverage > 1 ? `<div class="foot" style="color:var(--rethink)">Your target is ${score.coverage}× what one outlet can realistically capture.</div>` : "");
+
+  // price chart
+  const sorted = [...comps.map(c => ({ n: c.name, p: c.price })), { n: "Your idea", p: inp.price, me: 1 }].sort((a, b) => a.p - b.p);
+  $("posSub").textContent = `Prices per ${k.unit} in ${city}. Dashed line is the local median.`;
+  chart("cPrice", { type: "bar", data: { labels: sorted.map(x => x.n), datasets: [{ data: sorted.map(x => x.p), backgroundColor: sorted.map(x => x.me ? "#E8912A" : "#B9C0F2"), borderRadius: 6, barThickness: 20 }] },
+    options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmtI(c.raw) } } },
+      scales: { x: { grid: { color: "#EDF0F6" }, ticks: { callback: v => "₹" + v.toLocaleString("en-IN") } }, y: { grid: { display: false }, ticks: { color: "#1B2140", font: { weight: 600 } } } } },
+    plugins: [{ id: "med", afterDraw(ch) { const x = ch.scales.x.getPixelForValue(econ.competitor_median_price), { top, bottom } = ch.chartArea, c = ch.ctx; c.save(); c.setLineDash([4, 4]); c.strokeStyle = "#1B2140"; c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke(); c.restore(); } }] });
+
+  // competitors
+  const pmax = Math.max(...comps.map(c => c.price), inp.price) * 1.05;
+  const stars = r => "★".repeat(Math.round(r)) + "☆".repeat(5 - Math.round(r));
+  $("tComp").innerHTML = `<thead><tr><th>Competitor</th><th>Price vs yours</th><th>Rating</th><th>Sells via</th><th>Strength</th><th>Gap you can attack</th></tr></thead><tbody>` +
+    comps.map(c => `<tr><td class="cname"><b>${esc(c.name)}</b><span>${esc(c.type)}, ${esc(c.locality)}</span></td>
+      <td class="pcell"><b>${fmtI(c.price)}</b> <span style="font-size:12px;color:${c.price > inp.price ? "var(--go)" : "var(--ink-3)"}">${c.price > inp.price ? "pricier" : c.price < inp.price ? "cheaper" : "same"}</span><div class="pbar"><i style="width:${c.price / pmax * 100}%"></i><u style="left:${inp.price / pmax * 100}%"></u></div></td>
+      <td><span class="stars" aria-label="${c.rating} out of 5">${stars(c.rating)}</span><br><span style="font-size:12px;color:var(--ink-3)">${c.reviews ? `${c.rating} from ${fmtN(c.reviews)}` : `${c.rating} (estimated)`}</span></td>
+      <td><span class="pill">${esc(c.channel)}</span></td><td>${esc(c.strengths)}</td><td class="gap">${esc(c.gaps)}</td></tr>`).join("") + "</tbody>";
+
+  // needs
+  $("needs").innerHTML = needs.map(x => {
+    const g = x.gap, bg = g >= 1.5 ? "var(--you-soft)" : "var(--paper)", col = g >= 1.5 ? "#8A520C" : "var(--ink-2)";
+    return `<div class="need"><div><div class="nt">${esc(x.need)}</div><div class="nbars"><div class="imp" style="width:${x.importance / 5 * 100}%"></div><div class="sat" style="width:${x.current_satisfaction / 5 * 100}%"></div></div></div><div class="gapv" style="background:${bg};color:${col}">${g.toFixed(1)}<small>gap</small></div></div>`;
+  }).join("");
+  $("positioning").textContent = n.positioning;
+  $("opps").innerHTML = (n.opportunities || []).map(o => `<li>${ic("spark")}<span>${esc(o)}</span></li>`).join("");
+
+  // costs
+  $("costSub").textContent = `${costs.area_sqft.toLocaleString("en-IN")} sq ft at ${fmtI(costs.rent_per_sqft)} per sq ft a month, with room for ${fmtN(costs.capacity_units_per_month)} ${k.unit}s a month`;
+  const pal = ["#3D4BE0", "#7C86EC", "#B9C0F2", "#E8912A", "#F5C88F", "#14895B"];
+  const stack = (o, tot) => Object.values(o).map((v, i) => `<i style="width:${v / tot * 100}%;background:${pal[i % 6]}" title="${fmtI(v)}"></i>`).join("");
+  const tbl = (o, total) => `<tbody>` + Object.entries(o).map(([a, b], i) => `<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${pal[i % 6]};margin-right:8px"></span>${a}</td><td class="n">${fmtI(b)}</td></tr>`).join("") + `<tr class="total"><td>Total</td><td class="n">${fmtI(total)}</td></tr></tbody>`;
+  $("capexStack").innerHTML = stack(costs.capex, costs.capex_total); $("tCapex").innerHTML = tbl(costs.capex, costs.capex_total);
+  $("fixedStack").innerHTML = stack(costs.fixed_monthly, costs.fixed_monthly_total); $("tFixed").innerHTML = tbl(costs.fixed_monthly, costs.fixed_monthly_total);
+  const v = costs.variable;
+  const vrows = [["Ingredients and supplies", v.cogs_pct], [`Platform commission on ${Math.round(v.share_of_orders_via_platforms * 100)}% of orders`, v.platform_commission_pct * v.share_of_orders_via_platforms], ["Payment fees", v.payment_fees_pct], ["Ongoing marketing", v.marketing_pct_of_revenue]];
+  const vt = vrows.reduce((a, b) => a + b[1], 0);
+  $("tVar").innerHTML = `<tbody>` + vrows.map(([a, b]) => `<tr><td>${a}</td><td class="n">${(b * 100).toFixed(1)}%</td></tr>`).join("") + `<tr class="total"><td>Of every ${fmtI(inp.price)} sale</td><td class="n">${fmtI(inp.price * vt)}</td></tr></tbody>`;
+  $("costnote").innerHTML = [[fmtI(costs.launch_marketing_monthly_first_3m), "extra launch marketing a month for the first 3 months"], [fmtI(econ.contribution_per_unit), `left from each ${k.unit} after variable costs`], [fmtL(-Math.min(...econ.cumulative_cash)), "lowest cash point before the business turns around"]]
+    .map(([a, b]) => `<div class="cn"><b>${a}</b><span>${b}</span></div>`).join("");
+
+  // cash
+  const low = Math.min(...econ.cumulative_cash);
+  $("cashSub").textContent = econ.payback_month ? `You get back the ${fmtL(econ.capex_total)} setup cost and early losses by month ${econ.payback_month}` : `The ${fmtL(econ.capex_total)} setup cost isn't recovered within 36 months`;
+  chart("cCash", { type: "line", data: { labels: econ.cumulative_cash.map((_, i) => "M" + (i + 1)),
+    datasets: [{ label: "Cumulative cash", data: econ.cumulative_cash, borderColor: "#3D4BE0", borderWidth: 2.5, tension: .3, pointRadius: 0, fill: { target: "origin", above: "rgba(20,137,91,.12)", below: "rgba(194,59,49,.08)" } },
+      { label: "Your budget", data: econ.cumulative_cash.map(() => -inp.budget), borderColor: "#E8912A", borderDash: [6, 5], borderWidth: 2, pointRadius: 0 }] },
+    options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + fmtL(c.raw) } } },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }, y: { ticks: { callback: v => (v / 1e5).toFixed(0) + " L" } } } } });
+
+  // sweep
+  const best = sweep.reduce((a, b) => (b.profit > a.profit ? b : a));
+  chart("cSweep", { type: "line", data: { labels: sweep.map(s => "₹" + s.price),
+    datasets: [{ label: "Monthly profit", data: sweep.map(s => s.profit), borderColor: "#3D4BE0", borderWidth: 2.5, tension: .35,
+      pointRadius: sweep.map(s => s.price === inp.price || s === best ? 7 : 0), pointBackgroundColor: sweep.map(s => s.price === inp.price ? "#E8912A" : "#14895B"), pointBorderColor: "#fff", pointBorderWidth: 2 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmtI(c.raw) + " a month" } } },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 9 } }, y: { ticks: { callback: v => (v / 1e3).toFixed(0) + "k" } } } } });
+  $("pricing").innerHTML = `<span style="color:#E8912A">●</span> your price &nbsp; <span style="color:#14895B">●</span> most profitable in the model<br>` + esc(n.pricing || "");
+
+  // risks, plan
+  // business model canvas (AI improves the rules draft when available)
+  const bm = { ...r.bm, ...(n.business_model || {}) }, bmAI = n.business_model && Object.keys(n.business_model).length;
+  const UL = a => `<ul>${(Array.isArray(a) ? a : [a]).filter(Boolean).map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  const blk = (cls, icon, title, body) => `<div class="cb ${cls}"><h4>${ic(icon)}${title}</h4>${body}</div>`;
+  $("canvas").innerHTML = blk("c-prob", "flag", "Problems", UL(bm.problems)) + blk("c-sol", "tool", "Key activities", UL(bm.key_activities)) + blk("c-met", "chart", "Key metrics", UL(bm.key_metrics))
+    + blk("c-vp vp", "spark", "Value proposition", `<p>${esc(bm.value_proposition)}</p>`) + blk("c-adv", "shield", "Unfair advantage", `<p>${esc(bm.unfair_advantage)}</p>`)
+    + blk("c-ch", "store", "Channels", UL(bm.channels)) + blk("c-seg", "users", "Customer segments", UL(bm.customer_segments) + `<h4 style="margin-top:10px">${ic("desk")}Key resources and partners</h4>` + UL([...(bm.key_resources || []), ...(bm.key_partners || [])]))
+    + blk("c-cost", "coins", "Cost structure", UL(bm.cost_structure)) + blk("c-rev", "wallet", "Revenue streams", UL(bm.revenue_streams));
+  $("bmSrc").innerHTML = ic(bmAI ? "spark" : "shield") + (bmAI ? "Developed by Claude from the analysis" : "Built by the rules engine from the analysis");
+  // assumption check
+  const CK = r.checks, SI = { ok: "check", stretch: "info", unrealistic: "x", unverified: "help" }, SL = { ok: "Plausible", stretch: "Stretch", unrealistic: "Unrealistic", unverified: "Needs checking" };
+  $("chkCounts").innerHTML = ["unrealistic", "stretch", "unverified", "ok"].map(k => `<span class="st-b ${k}">${ic(SI[k])}${CK.counts[k]} ${SL[k].toLowerCase()}</span>`).join("");
+  $("tChecks").innerHTML = `<thead><tr><th>Assumption</th><th>Value used</th><th>Source</th><th>Check</th><th>Why</th><th class="n">Profit if 20% worse</th></tr></thead><tbody>` +
+    CK.list.map(a => `<tr><td><b>${esc(a.assumption)}</b></td><td>${esc(a.value)}</td><td><span class="pill">${esc(a.source)}</span></td><td><span class="st-b ${a.status}">${ic(SI[a.status])}${SL[a.status]}</span></td><td class="why">${esc(a.check)}</td>
+      <td class="n" style="color:${a.impact < 0 ? "var(--rethink)" : "var(--ink-3)"}">${a.impact === null || a.impact === undefined ? "—" : (a.impact < 0 ? "−" : "+") + fmtI(Math.abs(a.impact)) + "/mo"}</td></tr>`).join("") + "</tbody>";
+  $("sensSub").textContent = `Change in monthly steady-state profit (base case ${fmtI(CK.base)} a month)`;
+  chart("cSens", { type: "bar", data: { labels: CK.sensitivity.map(x => x.label), datasets: [{ data: CK.sensitivity.map(x => x.delta), backgroundColor: CK.sensitivity.map(x => x.delta < 0 ? "#E8A39C" : "#9FD3BC"), borderRadius: 5 }] },
+    options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => (c.raw < 0 ? "−" : "+") + fmtI(Math.abs(c.raw)) + " a month" } } }, scales: { x: { ticks: { callback: v => (v / 1000).toFixed(0) + "k" } }, y: { grid: { display: false }, ticks: { color: "#1B2140" } } } } });
+  // validation questions + interview guide
+  const VQ = (n.validation_questions && n.validation_questions.length >= 4) ? n.validation_questions : r.vplan.questions, vqAI = VQ !== r.vplan.questions;
+  $("tVQ").innerHTML = `<thead><tr><th>Priority</th><th>Question</th><th>Why it matters</th><th>How to validate</th><th>Success signal</th></tr></thead><tbody>` +
+    VQ.map(q => `<tr><td><span class="pri-b ${q.priority}">${q.priority}</span></td><td><b>${esc(q.question)}</b></td><td>${esc(q.why)}</td><td>${esc(q.method)}</td><td>${esc(q.signal)}</td></tr>`).join("") + "</tbody>";
+  $("vqSrc").innerHTML = ic(vqAI ? "spark" : "shield") + (vqAI ? "Written by Claude from the assumption check" : "Generated from the assumption check");
+  $("guide").innerHTML = ((n.interview_guide && n.interview_guide.length >= 4) ? n.interview_guide : r.vplan.guide).map(q => `<li>${esc(q)}</li>`).join("");
+  r.vq = VQ;
+  $("risks").innerHTML = (n.risks || []).map(x => `<div class="risk"><div class="r">${ic("flag")}<span>${esc(x.risk)}</span></div><div class="m">${ic("shield")}<span>${esc(x.mitigation)}</span></div></div>`).join("");
+  $("plan").innerHTML = (n.plan || []).map((p, i) => `<div class="ph"><div class="pt"><span class="pn">${i + 1}</span><h3>${esc(p.phase)}</h3><span class="prog" data-p="${i}">0/${(p.actions || []).length}</span></div>${(p.actions || []).map(a => `<label class="task"><input type="checkbox" data-p="${i}"><span>${esc(a)}</span></label>`).join("")}</div>`).join("");
+  if (r.dataSource === "ai" && r.research && r.research.verify.length) n.validate = [...new Set([...(n.validate || []), ...r.research.verify])].slice(0, 6);
+
+  $("footer").textContent = r.dataSource === "ai" ? "Market data for this idea was estimated by Claude from general knowledge, not live listings. Competitor names may be archetypes, and prices and costs are estimates. Check them against real quotes, listings and customer interviews before deciding." : "All figures come from a demo dataset: competitors are fictional and city costs are indicative. Before deciding, check them against real quotes, listings and customer interviews.";
+
+  lastSummary = `LAUNCH ANALYSIS: ${inp.idea}\n${k.name}, ${city}, ${seg}\n\nScore: ${score.total}/100 (${score.verdict})\n${n.headline}\n\n` + score.parts.map(p => `- ${p.key}: ${p.score}`).join("\n") +
+    `\n\nKey numbers\n- Reachable buyers: ${fmtN(market.addressable_customers)}\n- Price ${fmtI(inp.price)} vs median ${fmtI(econ.competitor_median_price)}\n- Margin per sale: ${econ.contribution_margin_pct}%\n- Break-even: ${econ.breakeven_units_per_month} ${k.unit}s a month\n- Money needed: ${fmtL(econ.capital_needed_incl_buffer)} (budget ${fmtL(inp.budget)})\n- Payback: ${econ.payback_month ? "month " + econ.payback_month : "after 36 months"}\n\nPositioning\n${n.positioning}\n\nPricing\n${n.pricing}\n\nRisks\n` +
+    (n.risks || []).map(x => `- ${x.risk} Mitigation: ${x.mitigation}`).join("\n") + `\n\n90-day plan\n` + (n.plan || []).map(p => `${p.phase}\n` + p.actions.map(a => `  - ${a}`).join("\n")).join("\n");
+  setTimeout(() => document.querySelector('[data-tab="overview"]').scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+}
+$("plan").addEventListener("change", e => { const i = e.target.dataset.p; const all = [...document.querySelectorAll(`#plan input[data-p="${i}"]`)]; document.querySelector(`.prog[data-p="${i}"]`).textContent = `${all.filter(x => x.checked).length}/${all.length}`; });
+
+/* tabs + scrollspy */
+$("tabs").addEventListener("click", e => { const b = e.target.closest("[data-go]"); if (b) document.querySelector(`[data-tab="${b.dataset.go}"]`).scrollIntoView({ behavior: "smooth", block: "start" }); });
+const spy = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) document.querySelectorAll("#tabs [data-go]").forEach(b => b.classList.toggle("on", b.dataset.go === en.target.dataset.tab)); }), { rootMargin: "-130px 0px -60% 0px" });
+document.querySelectorAll("[data-tab]").forEach(s => spy.observe(s));
+
+function toast(t) { $("toastTxt").textContent = t; $("toast").classList.add("show"); setTimeout(() => $("toast").classList.remove("show"), 2000); }
+
+/* ---------- landing: launch board, examples, routing ---------- */
+const BOARD = PRESETS.map((p, i) => { const r = analyse({ ...p, budget: p.budget * 1e5 }); return { i, p, score: r.score.total, verdict: r.score.verdict, cm: r.econ.contribution_margin_pct, payback: r.econ.payback_month }; });
+const flapHTML = (txt) => [...String(txt)].map(c => `<i>${c === " " ? "&nbsp;" : c}</i>`).join("");
+$("boardRows").innerHTML = BOARD.map(b => `<div class="brow" role="button" tabindex="0" data-preset="${b.i}" aria-label="${b.p.label} in ${b.p.where}: ${b.score} out of 100, ${b.verdict}">
+  <span class="bi">${ic(CAT_ICON[b.p.category])}</span><span class="bn"><b>${b.p.label}</b><span>${esc(b.p.idea)}</span></span><span class="bc">${b.p.where}</span>
+  <span class="bscore"><span class="flap" data-final="${b.score}">${flapHTML("00")}</span></span><span class="bstat ${b.verdict}"><span class="flap" data-final="${b.verdict}">${flapHTML("-------".slice(0, b.verdict.length))}</span></span></div>`).join("");
+$("boardTime").textContent = "Updated " + new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+let boardPlayed = false;
+function playBoard() {
+  if (boardPlayed) return; boardPlayed = true;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const CH = "ABCDEFGHIKNORT0123456789";
+  document.querySelectorAll("#boardRows .flap").forEach((el, n) => {
+    const fin = el.dataset.final, cells = [...el.querySelectorAll("i")];
+    if (reduce) { el.innerHTML = flapHTML(fin); return; }
+    const row = Math.floor(n / 2), startAt = 250 + row * 220, ticks = 9 + (n % 2) * 4;
+    let t = 0;
+    setTimeout(function tick() {
+      t++;
+      cells.forEach((c, j) => { c.textContent = t >= ticks + j ? fin[j] : CH[Math.floor(Math.random() * CH.length)]; });
+      if (t < ticks + cells.length) setTimeout(tick, 55);
+    }, startAt);
+  });
+}
+$("exgrid").innerHTML = BOARD.map(b => `<button class="excard" type="button" data-preset="${b.i}">
+  <div class="et"><span class="ei2">${ic(CAT_ICON[b.p.category])}</span><span class="chip ${b.verdict}" style="font-size:11.5px;padding:4px 9px">${b.verdict}</span></div>
+  <h3>${b.p.label}, ${b.p.where}</h3><p>${esc(b.p.idea)}</p>
+  <div class="eb"><span>Score <b>${b.score}</b></span><span>Margin ${Math.round(b.cm)}%</span><span>${b.payback ? "Payback in " + b.payback + " mo" : "No payback in 3 yrs"}</span></div></button>`).join("") +
+  `<button class="excard own" type="button" data-own="1"><div class="et"><span class="ei2">${ic("spark")}</span></div><h3>Your own idea, any city</h3><p>Describe any business. Claude researches competitors, prices, customer needs and costs, then runs the same analysis.</p><div class="eb"><span>Needs the AI agent</span></div></button>`;
+
+function openPreset(i) { loadPreset(i); location.hash = "planner"; }
+document.addEventListener("click", e => {
+  const o = e.target.closest("[data-own]"); if (o && !o.closest("#presets")) { location.hash = "planner"; startCustom(); return; }
+  const t = e.target.closest("[data-preset]"); if (t && !t.closest("#presets")) openPreset(+t.dataset.preset); });
+$("boardRows").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.dataset.preset) { e.preventDefault(); openPreset(+e.target.dataset.preset); } });
+
+const SECTIONS = ["how-it-works", "the-report", "examples"];
+function route() {
+  const h = location.hash.slice(1);
+  const planner = h === "planner";
+  $("homeView").style.display = planner ? "none" : "block";
+  $("appView").style.display = planner ? "block" : "none";
+  $("navlinks").style.visibility = planner ? "hidden" : "visible";
+  $("navCta").style.display = planner ? "none" : ""; $("homeLink").style.display = planner ? "" : "none";
+  document.title = planner ? "Planner · Startup Launch Planning Agent" : "Startup Launch Planning Agent";
+  if (planner) { window.scrollTo(0, 0); Object.values(charts).forEach(c => c.resize()); }
+  else { playBoard(); if (SECTIONS.includes(h)) document.getElementById(h).scrollIntoView(); else window.scrollTo(0, 0); }
+}
+window.addEventListener("hashchange", route);
+route();
+
+/* ---------- PDF report ---------- */
+const pdfText = s => String(s ?? "").replace(/₹/g, "Rs ").replace(/[–—]/g, "-").replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+  .replace(/×/g, "x").replace(/≈/g, "~").replace(/±/g, "+/-").replace(/→/g, "->").replace(/…/g, "...").replace(/·/g, "-").replace(/[^\x00-\xFF]/g, "");
+
+function buildPdf(r) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const { inp, market, comps, needs, costs, econ, score, narrative: n, sweep } = r;
+  const k = DATA.categories[inp.category], city = DATA.cities[inp.city].name, seg = DATA.segments[inp.segment].name;
+  const W = 210, M = 16, CW = W - 2 * M;
+  const INK = [27, 33, 64], INK2 = [74, 81, 117], INK3 = [124, 131, 163], LINE = [223, 227, 238], PRI = [61, 75, 224], YOU = [232, 145, 42];
+  const VC = { GO: [20, 137, 91], REFINE: [199, 122, 18], RETHINK: [194, 59, 49] };
+  const toneC = s => s >= 70 ? VC.GO : s >= 50 ? VC.REFINE : VC.RETHINK;
+  let y = 0;
+  const T = pdfText;
+  const text = (t, x, yy, o = {}) => { doc.setFont("helvetica", o.bold ? "bold" : "normal"); doc.setFontSize(o.size || 10); doc.setTextColor(...(o.color || INK)); doc.text(T(t), x, yy, o.align ? { align: o.align } : undefined); };
+  const para = (t, o = {}) => { doc.setFont("helvetica", o.bold ? "bold" : "normal"); doc.setFontSize(o.size || 10); doc.setTextColor(...(o.color || INK)); const lines = doc.splitTextToSize(T(t), o.w || CW); ensure(lines.length * (o.lh || 4.6) + 2); doc.text(lines, o.x || M, y); y += lines.length * (o.lh || 4.6) + (o.after ?? 3); };
+  const ensure = h => { if (y + h > 280) { doc.addPage(); y = 20; } };
+  const h2 = t => { ensure(18); y += 4; doc.setFillColor(...PRI); doc.rect(M, y - 4.2, 1.6, 5.6, "F"); text(t, M + 4, y, { bold: true, size: 13.5 }); y += 7; };
+  const img = (id, h) => { const c = charts[id]; if (!c) return; ensure(h + 4); const ratio = c.canvas.width / c.canvas.height; const w = Math.min(CW, h * ratio); doc.addImage(c.toBase64Image("image/png", 1), "PNG", M + (CW - w) / 2, y, w, h); y += h + 4; };
+  const table = (head, body, opts = {}) => {
+    doc.autoTable({ startY: y, head: [head.map(T)], body: body.map(r => r.map(T)), margin: { left: M, right: M }, theme: "grid",
+      styles: { font: "helvetica", fontSize: 8.6, cellPadding: 2, textColor: INK, lineColor: LINE, lineWidth: .2, valign: "top" },
+      headStyles: { fillColor: INK, textColor: 255, fontStyle: "bold" }, alternateRowStyles: { fillColor: [248, 249, 252] }, ...opts });
+    y = doc.lastAutoTable.finalY + 6;
+  };
+
+  // ---- cover band
+  doc.setFillColor(...INK); doc.rect(0, 0, W, 46, "F");
+  text("Launch Planner", M, 13, { bold: true, size: 10, color: [185, 192, 242] });
+  text("Startup launch analysis", M, 23, { bold: true, size: 20, color: [255, 255, 255] });
+  doc.setFontSize(10.5); doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "normal");
+  doc.text(doc.splitTextToSize(T(inp.idea), CW - 50), M, 31);
+  text(`${k.name}  |  ${city}  |  ${seg}`, M, 41, { size: 8.5, color: [185, 192, 242] });
+  text(new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }), W - M, 13, { size: 8.5, color: [185, 192, 242], align: "right" });
+
+  // ---- verdict
+  y = 58;
+  const vc = VC[score.verdict];
+  doc.setDrawColor(...LINE); doc.setFillColor(250, 251, 254); doc.roundedRect(M, y, 52, 46, 3, 3, "FD");
+  text(String(score.total), M + 26, y + 22, { bold: true, size: 34, align: "center" });
+  text("launch score / 100", M + 26, y + 29, { size: 8, color: INK3, align: "center" });
+  doc.setFillColor(...vc); doc.roundedRect(M + 12, y + 33, 28, 8, 4, 4, "F");
+  text(score.verdict, M + 26, y + 38.6, { bold: true, size: 9.5, color: [255, 255, 255], align: "center" });
+  const x2 = M + 60, w2 = CW - 60;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(...INK);
+  const hl = doc.splitTextToSize(T(n.headline), w2); doc.text(hl, x2, y + 5); let yy = y + 5 + hl.length * 5.2 + 2;
+  score.parts.forEach(p => {
+    text(`${p.key} (${Math.round(p.weight * 100)}%)`, x2, yy + 3, { size: 8.5, color: INK2 });
+    doc.setFillColor(237, 240, 246); doc.roundedRect(x2 + 52, yy, w2 - 64, 3.6, 1.8, 1.8, "F");
+    doc.setFillColor(...toneC(p.score)); doc.roundedRect(x2 + 52, yy, (w2 - 64) * p.score / 100, 3.6, 1.8, 1.8, "F");
+    text(String(p.score), x2 + w2, yy + 3, { bold: true, size: 9, align: "right" }); yy += 6.4;
+  });
+  y = Math.max(y + 52, yy + 4);
+
+  // ---- key numbers
+  const kp = [["Reachable buyers", fmtN(market.addressable_customers), `${seg.toLowerCase()} in ${city}`],
+    ["Your price vs market", (econ.price_vs_median_pct > 0 ? "+" : "") + econ.price_vs_median_pct + "%", `median ${fmtI(econ.competitor_median_price)}`],
+    ["Margin per sale", econ.contribution_margin_pct + "%", `${fmtI(econ.contribution_per_unit)} per ${k.unit}`],
+    ["Break-even", econ.breakeven_units_per_month ? fmtN(econ.breakeven_units_per_month) + ` ${k.unit}s/mo` : "Never", `${econ.breakeven_capacity_utilisation_pct}% of capacity`],
+    ["Money needed", fmtL(econ.capital_needed_incl_buffer), `budget ${fmtL(inp.budget)}`],
+    ["Payback", econ.payback_month ? "Month " + econ.payback_month : "After 36 months", `${fmtI(econ.steady_state_monthly_profit)} profit a month`]];
+  const bw = (CW - 8) / 3;
+  kp.forEach(([a, b, c], i) => {
+    const bx = M + (i % 3) * (bw + 4), by = y + Math.floor(i / 3) * 24;
+    doc.setDrawColor(...LINE); doc.setFillColor(255, 255, 255); doc.roundedRect(bx, by, bw, 20, 2, 2, "FD");
+    text(a, bx + 4, by + 6, { size: 8, color: INK2, bold: true }); text(b, bx + 4, by + 13, { size: 13, bold: true }); text(c, bx + 4, by + 17.5, { size: 7.5, color: INK3 });
+  });
+  y += 52;
+
+  h2("Positioning");
+  para(n.positioning, { after: 2 });
+  para(n.pricing || "", { color: INK2, size: 9.5 });
+
+  // ---- market
+  h2("Local market opportunity");
+  para(`${k.name} in ${city} is growing about ${Math.round(market.category_growth_yoy * 100)}% a year.`, { color: INK2, size: 9.5 });
+  table(["Funnel step", "People"], [["Everyone in " + city, fmtN(market.city_population)], [seg, fmtN(market.segment_population)], ["Already buy this category", fmtN(market.addressable_customers)],
+    ["Within reach of one outlet", fmtN(market.serviceable_customers_one_outlet)], [`Realistically yours (${Math.round(market.realistic_capture_rate * 100)}% capture)`, fmtN(score.realisticCustomers)], ["Your monthly target", fmtN(inp.customers) + (score.coverage > 1 ? "  (above realistic capture)" : "")]],
+    { columnStyles: { 1: { halign: "right", cellWidth: 50 } } });
+  ensure(72); text("Where your price sits", M, y, { bold: true, size: 10.5 }); y += 4;
+  img("cPrice", 62);
+
+  // ---- competitors
+  h2("Competitors near you");
+  table(["Competitor", "Type / locality", "Price", "Rating", "Sells via", "Strength", "Gap to attack"],
+    comps.map(c => [c.name, `${c.type}, ${c.locality}`, fmtI(c.price), (c.reviews ? `${c.rating} (${fmtN(c.reviews)})` : `${c.rating} (est.)`), c.channel, c.strengths, c.gaps]),
+    { columnStyles: { 2: { halign: "right", cellWidth: 17 }, 3: { cellWidth: 17 }, 6: { textColor: [194, 59, 49] } } });
+
+  // ---- customers
+  h2("What customers need");
+  table(["Need", "Importance", "Satisfaction today", "Gap"], needs.map(x => [x.need, x.importance.toFixed(1), x.current_satisfaction.toFixed(1), x.gap.toFixed(1)]),
+    { columnStyles: { 1: { halign: "center" }, 2: { halign: "center" }, 3: { halign: "center", fontStyle: "bold" } } });
+  text("Where to win", M, y, { bold: true, size: 10.5 }); y += 5;
+  (n.opportunities || []).forEach(o => { para("- " + o, { size: 9.5, after: 1.5, x: M + 2, w: CW - 2 }); });
+  y += 2;
+
+  // ---- costs
+  h2("Business model");
+  { const bm = { ...r.bm, ...(n.business_model || {}) }, J = v => (Array.isArray(v) ? v : [v]).filter(Boolean).map(x => "- " + x).join("\n");
+    table(["Block", "Content"], [["Customer segments", J(bm.customer_segments)], ["Problems", J(bm.problems)], ["Value proposition", bm.value_proposition], ["Channels", J(bm.channels)], ["Revenue streams", J(bm.revenue_streams)],
+      ["Cost structure", J(bm.cost_structure)], ["Key activities", J(bm.key_activities)], ["Key resources and partners", J([...(bm.key_resources || []), ...(bm.key_partners || [])])], ["Unfair advantage", bm.unfair_advantage], ["Key metrics", J(bm.key_metrics)]],
+      { columnStyles: { 0: { cellWidth: 40, fontStyle: "bold" } } }); }
+  h2("What it will cost");
+  para(`${costs.area_sqft.toLocaleString("en-IN")} sq ft at ${fmtI(costs.rent_per_sqft)} per sq ft a month; capacity ${fmtN(costs.capacity_units_per_month)} ${k.unit}s a month; ${inp.launch_model} model.`, { color: INK2, size: 9.5 });
+  const v = costs.variable;
+  const capexRows = Object.entries(costs.capex).map(([a, b]) => [a, fmtI(b)]).concat([["Total one-time setup", fmtI(costs.capex_total)]]);
+  const fixedRows = Object.entries(costs.fixed_monthly).map(([a, b]) => [a, fmtI(b)]).concat([["Total every month", fmtI(costs.fixed_monthly_total)], ["Launch marketing, months 1-3", fmtI(costs.launch_marketing_monthly_first_3m)]]);
+  ensure(95);
+  const startY = y, half = (CW - 6) / 2;
+  const bold = { didParseCell: d => { if (d.section === "body" && /^Total/.test(d.row.raw[0])) d.cell.styles.fontStyle = "bold"; } };
+  doc.autoTable({ startY, head: [["One-time setup", "Rs"]], body: capexRows.map(r => r.map(T)), margin: { left: M, right: W - M - half }, theme: "grid",
+    styles: { fontSize: 8.6, cellPadding: 2, textColor: INK, lineColor: LINE, lineWidth: .2 }, headStyles: { fillColor: INK, textColor: 255 }, columnStyles: { 1: { halign: "right" } }, ...bold });
+  const yA = doc.lastAutoTable.finalY;
+  doc.autoTable({ startY, head: [["Every month", "Rs"]], body: fixedRows.map(r => r.map(T)), margin: { left: M + half + 6, right: M }, theme: "grid",
+    styles: { fontSize: 8.6, cellPadding: 2, textColor: INK, lineColor: LINE, lineWidth: .2 }, headStyles: { fillColor: INK, textColor: 255 }, columnStyles: { 1: { halign: "right" } }, ...bold });
+  y = Math.max(yA, doc.lastAutoTable.finalY) + 6;
+  table(["On every sale", "% of price"], [["Ingredients and supplies", (v.cogs_pct * 100).toFixed(1) + "%"], [`Platform commission on ${Math.round(v.share_of_orders_via_platforms * 100)}% of orders`, (v.platform_commission_pct * v.share_of_orders_via_platforms * 100).toFixed(1) + "%"],
+    ["Payment fees", (v.payment_fees_pct * 100).toFixed(1) + "%"], ["Ongoing marketing", (v.marketing_pct_of_revenue * 100).toFixed(1) + "%"]], { columnStyles: { 1: { halign: "right", cellWidth: 40 } } });
+
+  // ---- economics
+  h2("Cash over 36 months");
+  para(econ.payback_month ? `Setup cost of ${fmtL(econ.capex_total)} and early losses are recovered by month ${econ.payback_month}. Lowest cash point: ${fmtL(-Math.min(...econ.cumulative_cash))}.` : `The ${fmtL(econ.capex_total)} setup cost is not recovered within 36 months. Lowest cash point: ${fmtL(-Math.min(...econ.cumulative_cash))}.`, { color: INK2, size: 9.5 });
+  img("cCash", 70);
+  h2("Profit at different prices");
+  const best = sweep.reduce((a, b) => (b.profit > a.profit ? b : a));
+  para(`At your price of ${fmtI(inp.price)} the model gives ${fmtI(econ.steady_state_monthly_profit)} a month at steady state; profit peaks near ${fmtI(best.price)} (${fmtI(best.profit)} a month).`, { color: INK2, size: 9.5 });
+  img("cSweep", 66);
+
+  h2("Assumption check");
+  { const SL = { ok: "Plausible", stretch: "Stretch", unrealistic: "Unrealistic", unverified: "Needs checking" };
+    table(["Assumption", "Value used", "Source", "Check", "Why", "Profit if 20% worse"], r.checks.list.map(a => [a.assumption, a.value, a.source, SL[a.status], a.check, a.impact === null || a.impact === undefined ? "-" : (a.impact < 0 ? "-" : "+") + fmtI(Math.abs(a.impact)) + "/mo"]),
+      { columnStyles: { 0: { fontStyle: "bold", cellWidth: 30 }, 3: { cellWidth: 20 }, 5: { halign: "right", cellWidth: 24 } }, didParseCell: d => { if (d.section === "body" && d.column.index === 3) d.cell.styles.textColor = { Plausible: [20, 137, 91], Stretch: [199, 122, 18], Unrealistic: [194, 59, 49] }[d.cell.raw] || INK2; } }); }
+  ensure(70); text("What if you're wrong? Change in monthly profit", M, y, { bold: true, size: 10.5 }); y += 4;
+  img("cSens", 62);
+  // ---- validation
+  h2("Questions to validate before you spend money");
+  table(["Priority", "Question", "Why it matters", "How to validate", "Success signal"], (r.vq || r.vplan.questions).map(q => [q.priority, q.question, q.why, q.method, q.signal]), { columnStyles: { 0: { cellWidth: 16 }, 1: { fontStyle: "bold", cellWidth: 40 } } });
+  h2("Customer interview guide");
+  ((n.interview_guide && n.interview_guide.length >= 4) ? n.interview_guide : r.vplan.guide).forEach((q, i) => para(`${i + 1}. ${q}`, { size: 9.5, after: 1.5 }));
+  // ---- risks & plan
+  h2("Risks to manage");
+  table(["Risk", "Mitigation"], (n.risks || []).map(x => [x.risk, x.mitigation]), { columnStyles: { 0: { textColor: [126, 35, 27] } } });
+  h2("Your first 90 days");
+  table(["Phase", "Actions"], (n.plan || []).map(p => [p.phase, (p.actions || []).map(a => "- " + a).join("\n")]), { columnStyles: { 0: { cellWidth: 40, fontStyle: "bold" } } });
+
+
+  // ---- footer on every page
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i); doc.setDrawColor(...LINE); doc.line(M, 286, W - M, 286);
+    text(n.source === "ai" ? "Strategy written by Claude using the research tools; numbers from the planning model." : "Strategy written by the built-in rules; numbers from the planning model.", M, 291, { size: 7, color: INK3 });
+    text(r.dataSource === "ai" ? "Market data estimated by Claude from general knowledge, not live listings. Verify before deciding." : "Demo dataset: competitors are fictional and costs indicative. Verify before deciding.", M, 294.5, { size: 7, color: INK3 });
+    text(`Page ${i} of ${pages}`, W - M, 291, { size: 7.5, color: INK3, align: "right" });
+  }
+  return doc;
+}
+
+let dlCap = null;
+(async () => { try { if (window.claude && window.claude.use) dlCap = await window.claude.use("downloads"); } catch { dlCap = null; } })();
+$("pdfBtn").onclick = async () => {
+  if (!lastR) return;
+  if (!window.jspdf) { toast("The PDF tool didn't load. Reload the page and try again."); return; }
+  const btn = $("pdfBtn"); btn.disabled = true; $("pdfTxt").textContent = "Preparing PDF…";
+  try {
+    const doc = buildPdf(lastR);
+    const slug = (lastR.inp.idea || "launch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "launch";
+    const filename = `launch-analysis-${slug}.pdf`;
+    const blob = doc.output("blob");
+    if (dlCap) {
+      try { await dlCap.save({ filename, data: blob }); toast("PDF report downloaded"); }
+      catch (e) {
+        const c = e && e.code;
+        toast(c === "declined" ? "Download cancelled" : c === "rate_limited" ? "A download prompt is already open" : "Downloads aren't available in this view");
+      }
+    } else {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast("PDF report downloaded");
+    }
+  } catch (e) { toast("Couldn't build the PDF: " + (e.message || e)); }
+  finally { btn.disabled = false; $("pdfTxt").textContent = "Download PDF report"; }
+};
+</script>
+</body>
+</html>
